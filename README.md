@@ -1,23 +1,34 @@
 # KET
 
-Orchestration tools for Elasticsearch and Kafka. The tool is best used as a native executable.
+Helper tools to work with Elasticsearch and Kafka. The tool is best used as a CLI.
 
 ## Quick Start
                   
 Start e.g. reindexing:
 ```shell script 
-./ket -o reindex -f examples/reindex-settings.json
+./ket reindex -f examples/reindex-settings.json
 ```
 
 See available options:
 ```shell script 
-./ket -h
-  -o, --operation OPERATION      One of: ["reindex" "replay" "profile-slow-logs"]
+$ ./ket -h
+  -o, --operation OPERATION      A name of a supported operation. One of: [kafka-to-kafka, kafka-to-ndjson, kafka-to-elasticsearch, elasticsearch-to-elasticsearch, reindex, elasticsearch-to-kafka, elasticsearch-to-ndjson, krp-to-ndjson, replay, deep-replay, polyglot, server]
+      --defaults                 Print to STDOUT the default configuration of the operation
+      --docs                     Print to STDOUT the docstring of the operation
   -f, --config-file CONFIG_FILE  Path to the JSON file with operation config
   -h, --help
-``` 
 
-## Native Executable 
+```
+
+```
+$ ./ket reindex --docs
+```
+
+```
+$ ./ket reindex --defaults
+```
+
+## Native Executable
 
 Either compile for yourself (for linux):
 ```shell script 
@@ -39,10 +50,10 @@ Download binary for your architecture from [here](https://github.com/vinted/kafk
 ### Reindex
 
 ```shell script 
-./ket -o reindex -f examples/reindex-settings.json
+./ket reindex -f examples/reindex-settings.json
 ```
 
-Reindex operation config file basic example: 
+Reindex operation config file basic example:
 ```json
 {
   "max_docs" : 1200,
@@ -66,97 +77,10 @@ Config file format is based on the [Elasticsearch Reindex API](https://www.elast
 - reindexing between clusters;
 - reindexing between clusters that are running different versions of Elasticsearch.
 - when starting disables `refresh` interval and at the end enables it.
-
-### Profile slow queries
-
-```shell script
-./ket -o profile-slow-logs -f examples/profile-slow-queries.json
-```     
-
-Profile config file basic example:
-```json
-{
-  "max_docs" : 10,
-  "source" : {
-    "remote" : {
-      "host" : "http://localhost:9200"
-    },
-    "index" : "elastic6-slow-query-2020.02.25",
-    "query": {
-      "query": {
-        "term": {
-          "field_name": {
-            "value": "value"
-          }
-        }
-      }
-    }
-  },
-  "target-es-host": "http://localhost:9200",
-  "concurrency": 100,
-  "dest" : {
-    "index" : "slow-logs-6-replay",
-    "remote" : {
-      "host" : "http://localhost:9200"
-    }
-  }
-}
-```
-Config file format is very similar to the `reindex` operation config with additional params:
-- `target-es-host`: where to execute the slow query, default `http://localhost:9200`;
-- `concurrency`: how many concurrent queries to execute at once, default `100`.
-
-### Replay queries from slow logs cluster                  
-
+### Copy Kafka topic(s) data to another Kafka topic
 
 ```shell script
-./ket -o replay -f examples/replay.json
-```   
-Replay config file basic example:
-```json 
-{
-  "max_docs" : 10,
-  "source" : {
-    "remote" : {
-      "host" : "http://localhost:9200"
-    },
-    "index" : "logstash-elastic6-slow-query-2020.02.25",
-    "query": {
-      "query": {
-        "term": {
-          "field_name": {
-            "value": "value"
-          }
-        }
-      }
-    }
-  },
-  "logs-slow-query-target-index-name-key": "index",
-  "logs-slow-query-key": "source_body",
-  "concurrency": 100,
-  "target-es-host": "http://localhost:9200",
-  "dest" : {
-    "index" : "xxd-slow-logs-6-replay",
-    "remote" : {
-      "host" : "http://localhost:9200"
-    }
-  },
-  "profiles": {
-    "explain": [false],
-    "profile": [false, true],
-    "_source": [false]
-  }
-}
-``` 
-Configuration is similar to `profile-slow-logs` with additional options:
-- `logs-slow-query-target-index-name-key`: which attribute contains index name;
-- `logs-slow-query-key`: which attribute contains slow query body; 
-- `profiles`: a map of attributes how to execute query that will be injected into the query.
-
-### Kafka to Kafka
-
-```shell script
-./ket -o kafka-to-kafka -f examples/kafka-to-kafka.json
+./ket kafka-to-kafka -f examples/kafka-to-kafka.json
 ```
 
 Example config:
@@ -176,38 +100,10 @@ Example config:
 
 `source` and `sink` maps are for Kafka consumer and producer options respectively. All available options are supported.
 
-### Kafka to Elasticsearch
-
-```shell script
-./ket -o kafka-to-elasticsearch -f examples/kafka-to-es.json
-```
-
-Example configuration:
-```json
-{
-  "max_docs": 1,
-  "source": {
-    "topic": "source-topic",
-    "bootstrap.servers": "127.0.0.1:9092"
-  },
-  "dest": {
-    "index": "dest-index-name",
-    "remote": {
-      "host": "http://localhost:9200"
-    }
-  },
-  "sink": {}
-}
-```
-
-`source` is kafka consumer options map.
-`dest` is the same as Elasticsearch reindex dest.
-`sink` is Elasticsearch sink opts.
-
 ### Elasticsearch to Kafka
 
 ```shell script
-./ket -o elasticsearch-to-kafka -f examples/es-to-kafka.json
+./ket elasticsearch-to-kafka -f examples/es-to-kafka.json
 ```
 Example configuration:
 ```json
@@ -240,7 +136,7 @@ Example configuration:
 ## Elasticsearch to ndjson
 
 ```shell script
-./ket -o elasticsearch-to-ndjson -f examples/es-to-ndjson.json
+./ket elasticsearch-to-ndjson -f examples/es-to-ndjson.json
 ```
 Example configuration:
 ```json
@@ -264,7 +160,7 @@ Example configuration:
 ## Kafka to ndjson
 
 ```shell script
-./ket -o kafka-to-ndjson -f examples/kafka-to-ndjson.json
+./ket kafka-to-ndjson -f examples/kafka-to-ndjson.json
 ```
 Example configuration:
 ```json
@@ -289,17 +185,7 @@ curl -s -H "Content-Type: application/x-ndjson" -XPOST localhost:9200/_bulk --da
 
 ## Polyglot transforms
 
-Try it for your self, e.g.: 
-```bash
-curl -X POST localhost:8090/ops/polyglot/execute -d '{
-    "data" : "{\"my\": \"data\"}",
-    "lang" : "js",
-    "script" : "(s) => { s[\"a\"] = \"b\"; return s;}"
-  }' 
-# => {"my":"data","a":"b"}  
-```
-
-Or from CLI:
+Try it for your self, e.g.:
 ```shell
 clojure -M -m core polyglot --data='{"foo":"bar"}' --file="my-script.js" --lang=js | jq '.result | fromjson'
 {
@@ -323,7 +209,13 @@ When an unknown value is provided, e.g. `ROOT_LOGGER_LEVEL=foo ./ket operation -
 
 - 7.x.y
 
-# Development
+## Development
 
-Development requires [GraalVM 20.3.0+](https://github.com/graalvm/graalvm-ce-builds/releases/tag/vm-20.3.0), 
-Docker and Docker Compose, GNU Make, and [Clojure CLI tools](https://clojure.org/guides/getting_started). 
+Development requires [GraalVM 20.3.0+](https://github.com/graalvm/graalvm-ce-builds/releases/tag/vm-20.3.0),
+Docker and Docker Compose, GNU Make, and [Clojure CLI tools](https://clojure.org/guides/getting_started).
+
+## License
+
+Copyright &copy; 2021 [Vinted](https://www.vinted.engineering).
+
+Distributed under BSD 3-Clause License
