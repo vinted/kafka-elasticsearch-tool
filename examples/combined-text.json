@@ -1,0 +1,43 @@
+{
+  "max_docs": 10000,
+  "source": {
+    "remote": {
+      "host": "http://localhost:9200",
+      "socket_timeout":  "5m"
+    },
+    "index": "logstash-elastic7-slow-query-2020.05.12",
+    "query": {
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "match": {
+                "source": "multi_match"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "target-es-host": "http://localhost:9200",
+  "concurrency": 100,
+  "times-to-repeat": 5,
+  "dest": {
+    "index": "compare_combined_text",
+    "remote": {
+      "host": "http://localhost:9200"
+    }
+  },
+  "sink": {
+    "batch.size" : 100,
+    "max.buffered.records" : 200,
+    "max.in.flight.requests" : 2,
+    "flush.timeout.ms" : 60000,
+    "retry.backoff.ms" : 900,
+    "max.retries" : 5,
+    "linger.ms" : 10000,
+    "read.timeout.ms" : 60000,
+    "connection.timeout.ms" : 60000
+  }
+}

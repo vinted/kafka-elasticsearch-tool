@@ -1,0 +1,26 @@
+{
+  "max_docs" : 10,
+  "source" : {
+    "remote" : {
+      "host" : "http://localhost:9200"
+    },
+    "index" : "logstash-elastic6-slow-query-2020.02.25",
+    "query": {
+      "query": {
+        "term": {
+          "index.keyword": {
+            "value": "value"
+          }
+        }
+      }
+    }
+  },
+  "target-es-host": "http://localhost:9200",
+  "concurrency": 100,
+  "dest" : {
+    "index" : "slow-logs-6-replay",
+    "remote" : {
+      "host" : "http://localhost:9200"
+    }
+  }
+}

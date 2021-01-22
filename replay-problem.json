@@ -1,0 +1,61 @@
+{
+  "max_docs": 10,
+  "source": {
+    "remote": {
+      "host": "http://localhost:9200"
+    },
+    "index": "query_logs",
+    "query": {
+      "query": {
+        "bool": {
+          "filter": [
+            {
+              "term": {
+                "uri.index": "index_name"
+              }
+            },
+            {
+              "match_phrase": {
+                "request": "created_at lte"
+              }
+            },
+            {
+              "match_phrase": {
+                "request": "user_updated_at lte"
+              }
+            }
+          ]
+        }
+      },
+      "sort": [
+        {
+          "header.timestamp": {
+            "order": "desc"
+          }
+        }
+      ]
+    }
+  },
+  "replay": {
+    "description": "Sample query replay description",
+    "uri_attr": "uri",
+    "repeats": 1,
+    "concurrency": 1,
+    "query-transforms": [
+      {
+        "lang": "js",
+        "script": "(request) => { return request; }"
+      }
+    ],
+    "id": "my-replay-id-0",
+    "connection.url": "http://localhost:9200",
+    "replay_data_attr": "replay",
+    "query_attr": "request"
+  },
+  "dest": {
+    "index": "experiment",
+    "remote": {
+      "host": "http://localhost:9200"
+    }
+  }
+}

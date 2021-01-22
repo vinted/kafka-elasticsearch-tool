@@ -1,0 +1,18 @@
+{
+  "max_docs": 100,
+  "source": {
+    "connection.url": "http://localhost:8082",
+    "group.id": "krp-group1_instance",
+    "consumer.name": "krp_instance",
+    "topic": "topic-name",
+    "timeout": 10000,
+    "offset": 0,
+    "concurrency": 20,
+    "consumer.request.timeout.ms": 5000,
+    "delete.consumer.instance": false
+  },
+  "sink": {
+    "filename": "ndjson/deep-replay.ndjson",
+    "partition-size": 1000
+  }
+}

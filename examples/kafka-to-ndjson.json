@@ -1,0 +1,10 @@
+{
+  "max_docs": 1,
+  "source": {
+    "topic": "source-topic",
+    "bootstrap.servers": "127.0.0.1:9092"
+  },
+  "sink": {
+    "filename ": "es-docs.ndjson"
+  }
+}

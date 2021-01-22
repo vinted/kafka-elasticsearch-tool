@@ -1,0 +1,15 @@
+{
+  "max_docs": 10000,
+  "source": {
+    "remote": {
+      "host": "http://localhost:9200"
+    },
+    "index": ".kibana",
+    "query": {
+      "size": 2000
+    }
+  },
+  "sink": {
+    "filename ": "es-docs.ndjson"
+  }
+}

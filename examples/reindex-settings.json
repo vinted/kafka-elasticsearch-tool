@@ -1,0 +1,15 @@
+{
+  "max_docs" : 1200,
+  "source" : {
+    "remote" : {
+      "host" : "http://localhost:9200"
+    },
+    "index" : ".kibana"
+  },
+  "dest" : {
+    "index" : "destination-index-name",
+    "remote" : {
+      "host" : "http://localhost:9200"
+    }
+  }
+}
