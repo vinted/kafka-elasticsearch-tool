@@ -1,0 +1,22 @@
+{
+  "max_docs": 10000,
+  "source": {
+    "remote": {
+      "connect_timeout": "10s",
+      "host": "http://localhost:9200",
+      "socket_timeout": "1m"
+    },
+    "index": ".kibana",
+    "query": {
+      "sort": [
+        "_doc"
+      ],
+      "size": 2000
+    },
+    "keywordize?": false
+  },
+  "sink": {
+    "topic": "kibana-data",
+    "bootstrap.servers": "127.0.0.1:9092"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "_index": "query_logs_20200724",
+  "_type": "_doc",
+  "_id": "query_logs_20200724+7+1544979",
+  "_version": 1544979,
+  "_score": null,
+  "_source": {
+    "header.offset": 1544979,
+    "header.topic": "storage-topic",
+    "header.timestamp": 1595626556589,
+    "body": "{\"query\":{\"match_all\":{}}}",
+    "uri": "/index-name/_count?terminate_after=99",
+    "header.partition": 7
+  },
+  "fields": {
+    "header.timestamp": [
+      "2020-07-24T21:35:56.589Z"
+    ]
+  },
+  "sort": [
+    1595626556589
+  ]
+}

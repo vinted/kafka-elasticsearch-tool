@@ -1,0 +1,27 @@
+version: '3'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION:-7.10.0}
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - logger.level=WARN
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    command: >
+      bash -c "elasticsearch-plugin install analysis-stempel;
+      docker-entrypoint.sh eswrapper"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+  tools-test:
+    depends_on:
+      - elasticsearch
+    build:
+      context: ../
+      dockerfile: dockerfiles/Dockerfile.test
+    environment:
+      ES_HOST: http://elasticsearch:9200
+      KAFKA_BOOTSTRAP_SERVERS: http://broker:29092
+    command: ["clojure", "-M:test", "--include", "integration"]

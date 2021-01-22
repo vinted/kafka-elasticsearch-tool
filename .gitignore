@@ -1,0 +1,10 @@
+.idea/
+**/*.iml
+.cpcache
+classes
+.nrepl-port
+.env
+es-tool
+target/
+.clj-kondo
+.lsp

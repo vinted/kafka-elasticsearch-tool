@@ -1,0 +1,27 @@
+version: '3'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION:-7.10.0}
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - logger.level=WARN
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    command: >
+      bash -c "elasticsearch-plugin install analysis-stempel;
+      docker-entrypoint.sh eswrapper"
+    ports:
+      - 9200:9200
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${ES_VERSION:-7.10.0}
+    environment:
+      SERVER_NAME: kibana
+      LOGGING_QUIET: 'true'
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - 5601:5601

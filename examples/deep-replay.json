@@ -1,0 +1,36 @@
+{
+  "max_docs": 1,
+  "source": {
+    "remote": {
+      "host": "http://localhost:9200"
+    },
+    "index": "query_logs",
+    "query": {
+      "query": {
+        "bool": {
+          "match_all": {}
+        }
+      }
+    }
+  },
+  "replay": {
+    "description": "deep replay description",
+    "uri_attr": "uri",
+    "target-index": "target-index-name",
+    "repeats": 1,
+    "concurrency": 10,
+    "uri-transforms": [],
+    "query-transforms": [],
+    "id": "my-replay-id",
+    "depth": 10000000,
+    "connection.url": "http://localhost:9200",
+    "replay_data_attr": "replay",
+    "query_attr": "request"
+  },
+  "sink": {
+    "implementation": "kafka",
+    "topic": "sink_topic_name",
+    "bootstrap.servers": "localhost:9092",
+    "linger.ms": 1000
+  }
+}

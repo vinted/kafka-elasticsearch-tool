@@ -1,0 +1,86 @@
+{
+  "max_docs": 100,
+  "source": {
+    "remote": {
+      "host": "http://localhost:9200"
+    },
+    "index": "query_logs",
+    "query": {
+      "query": {
+        "bool": {
+          "filter": [
+            {
+              "term": {
+                "query_from": {
+                  "value": 0
+                }
+              }
+            },
+            {
+              "term": {
+                "stats": {
+                  "value": "regular_items_lookup"
+                }
+              }
+            },
+            {
+              "range": {
+                "header.timestamp": {
+                  "gte": "now-2d"
+                }
+              }
+            },
+            {
+              "match": {
+                "request": "multi_match"
+              }
+            },
+            {
+              "prefix": {
+                "uri.keyword": "/index_name/_search"
+              }
+            }
+          ],
+          "must_not": [
+            {
+              "exists": {
+                "field": "query_sort"
+              }
+            }
+          ]
+        }
+      },
+      "sort": [
+        {
+          "header.timestamp": {
+            "order": "asc"
+          }
+        }
+      ],
+      "docvalue_fields": [
+        "uri.index"
+      ],
+      "size": 1
+    }
+  },
+  "replay": {
+    "connection.url": "http://localhost:9200",
+    "concurrency": 10,
+    "top-k": 100,
+    "query-transforms": [
+      {
+        "id": "test2",
+        "lang": "sci",
+        "script": "(fn [query boost] query)",
+        "vals": [
+          123
+        ]
+      }
+    ]
+  },
+  "sink": {
+    "connection.url": "http://localhost:9200",
+    "dest.index": "impact_sink_index",
+    "batch.size": 50
+  }
+}

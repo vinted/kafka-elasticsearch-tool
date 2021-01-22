@@ -1,0 +1,70 @@
+name: Upload Release Artifact Executable Macos
+
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  build-binary-executable:
+
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Cache maven deps
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-native-${{ hashFiles('**/deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-native-
+
+      - name: setup-graalvm-ce-native-image
+        run: |
+          GRAALVM_TGZ_URI="https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-20.1.0/graalvm-ce-java11-darwin-amd64-20.1.0.tar.gz"
+          curl -sL $GRAALVM_TGZ_URI --output graalvm.tar.gz
+          tar -zxvf graalvm.tar.gz
+          ls -alh .
+          ./graalvm-ce-java11-20.1.0/Contents/Home/bin/gu install native-image
+          export GRAALVM_HOME=$(pwd)/graalvm-ce-java11-20.1.0/Contents/Home/
+          export JAVA_HOME=${GRAALVM_HOME}
+          export PATH=${GRAALVM_HOME}/bin:$PATH
+
+      - name: Install clojure tools-deps
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          tools-deps: 1.10.1.469
+
+      - name: Compile native binary
+        run: |
+          export GRAALVM_HOME=$(pwd)/graalvm-ce-java11-20.1.0/Contents/Home/
+          echo $GRAALVM_HOME
+          export PATH=${GRAALVM_HOME}/bin:$PATH
+          clojure -A:native-ket
+          chmod +x ket
+          tar zcvf ket-macos.tar.gz ket
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: $(echo $GITHUB_REF | cut -d / -f 3)
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./ket-macos.tar.gz
+          asset_name: ket-macos.tar.gz
+          asset_content_type: application/octet-stream
