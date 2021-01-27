@@ -1,11 +1,11 @@
 {
-  "max_docs": 20000000,
+  "max_docs": 20,
   "source": {
     "remote": {
       "connect_timeout": "600s",
-      "host": "http://localhost:9200"
+      "host": "http://janitor.vinted.net:9200"
     },
-    "index": ".kibana"
+    "index": "catalog-core-items"
   },
   "dest": {
     "index": "kibana_backup",
