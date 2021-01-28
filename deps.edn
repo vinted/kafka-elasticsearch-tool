@@ -3,8 +3,8 @@
  :mvn/repos
  {"confluence" {:url "http://packages.confluent.io/maven/"}}
  :deps
- {org.clojure/clojure                         {:mvn/version "1.10.2-rc3"}
-  borkdude/sci                                {:mvn/version "0.1.1-alpha.10"}
+ {org.clojure/clojure                         {:mvn/version "1.10.2"}
+  borkdude/sci                                {:mvn/version "0.2.1"}
   borkdude/sci.impl.reflector                 {:mvn/version "0.0.1-java11"}
   lt.jocas/lazy-elasticsearch-scroll          {:mvn/version "1.0.16"}
   http-kit/http-kit                           {:mvn/version "2.5.0"}
