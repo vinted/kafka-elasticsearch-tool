@@ -187,7 +187,7 @@ curl -s -H "Content-Type: application/x-ndjson" -XPOST localhost:9200/_bulk --da
 
 Try it for your self, e.g.:
 ```shell
-clojure -M -m core polyglot --data='{"foo":"bar"}' --file="my-script.js" --lang=js | jq '.result | fromjson'
+./ket polyglot --data='{"foo":"bar"}' --file="my-script.js" --lang=js | jq '.result | fromjson'
 {
   "foo": "bar",
   "a": 123
@@ -196,6 +196,18 @@ clojure -M -m core polyglot --data='{"foo":"bar"}' --file="my-script.js" --lang=
 as seen in the example, the script can be stored in a file.
 
 Supported languages are `['js' 'sci']`.
+
+A useful trick is to provide data JSON string directly from a file.
+
+```shell
+./ket polyglot --data="$(jq "." data-file.json)" --file="my-script.js" --lang=js | jq '.result | fromjson'
+```
+
+Also, in the same fashion the script can be provided:
+```shell
+./ket polyglot --data="$(jq "." data-file.json)" --script="$(uglifyjs my-script.js)" --lang=js | jq '.result | fromjson'
+
+```
 
 ## Logging
 

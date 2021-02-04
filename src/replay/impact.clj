@@ -111,8 +111,8 @@
   (dp/deep-merge defaults conf))
 
 (defn execute
-  "Fetches baseline query and for several boost values transforms query,
-  invokes _rank_eval API for metrics on what is the impact of the query transforms to the ranking.
+  "Fetches baseline query and for a list of query transforms and values, generates variations of the query,
+  then invokes _rank_eval API for metrics on what is the impact of the query transforms to the ranking.
   Impact is defined as 1 minus precision-at-K."
   [conf]
   (log/infof "Starting a replay for impact with conf: '%s'" conf)
