@@ -24,8 +24,20 @@ $ ./ket -h
 $ ./ket reindex --docs
 ```
 
+Will print the doc string of the operation. To pretty print it you can:
+```bash
+$ printf "$(./ket reindex --docs)\n"
+```
+
+To get the default configuration of the operation:
 ```
 $ ./ket reindex --defaults
+```
+
+To store the defaults into a file that later can be passed to ket as `--config-file`
+
+```
+$ ./ket reindex --defaults | jq > config-file.json
 ```
 
 ## Native Executable

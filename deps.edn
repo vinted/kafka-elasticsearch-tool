@@ -42,7 +42,6 @@
    :jvm-opts   ["-Dclojure.main.report=stderr"]}
   :native-ket
   {:main-opts  ["-m clj.native-image core"
-                "--static"
                 "--enable-https"
                 "--no-fallback"
                 "--language:js"

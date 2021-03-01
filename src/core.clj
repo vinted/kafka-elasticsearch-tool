@@ -4,7 +4,7 @@
             [core.json :as json]
             [cli :as cli]
             [ops :as ops]
-            [server :as server]
+            [ops-overrides :as ops-overrides]
             [core.deep-merge :as dm])
   (:gen-class)
   (:import (org.slf4j LoggerFactory)
@@ -56,14 +56,8 @@
       (println (format "Failed to execute with exception:\n '%s'" e))
       (.printStackTrace e))))
 
-(def additional-operations
-  [{:name       "server"
-    :handler-fn server/start
-    :docs       (:doc (meta #'server/start))
-    :defaults   server/default-http-server-config}])
-
 (def cli-operations
-  (concat ops/operations additional-operations))
+  (concat ops/operations ops-overrides/cli))
 
 (defn handle-cli [args]
   (let [{:keys [options summary errors arguments] :as cli-opts} (cli/recursive-parse args cli-operations)]
