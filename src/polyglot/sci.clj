@@ -5,8 +5,8 @@
 
 (defn sci-compile [^String script]
   (sci/eval-string script
-                   {:classes {'UUID UUID
-                              'Date Date}}))
+                   {:classes {'java.util.UUID java.util.UUID
+                              'java.util.Date java.util.Date}}))
 
 (defn script->transform-fn [script]
   (let [transform-fn (sci-compile script)]
@@ -29,4 +29,4 @@
 (comment
   ((polyglot.sci/script->transform-fn-for-boost "(fn [& args] args)") 1 2 3)
 
-  ((polyglot.sci/script->transform-fn-for-boost "(fn [& args] (Date.))") 1 2 3))
+  ((polyglot.sci/script->transform-fn-for-boost "(fn [& args] (java.util.Date.))") 1 2 3))
