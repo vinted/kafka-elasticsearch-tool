@@ -29,7 +29,12 @@
   (let [^Context ctx (.build (Context/newBuilder (into-array String ["js"])))
         ^String wrapped-script (format "(query) => JSON.stringify((%s)(JSON.parse(query)))" script)
         ^Value f (.eval ctx "js" wrapped-script)]
-    (fn [^String value] (.asString (.execute f (object-array [value]))))))
+    (fn [^String value]
+      ; Turns out that can't be accesses by multiple threads
+      ; TODO: every thread should create its own Context
+      ; https://medium.com/graalvm/multi-threaded-java-javascript-language-interoperability-in-graalvm-2f19c1f9c37b
+      (locking ctx
+        (.asString (.execute f (object-array [value])))))))
 
 (defn script->transform-fn-vals
   "Given a JavaScript source code snippet creates a function that expects
@@ -39,7 +44,9 @@
   (let [^Context ctx (.build (Context/newBuilder (into-array String ["js"])))
         ^String wrapped-script (format "(...args) => { args[0] = JSON.parse(args[0]); return JSON.stringify((%s).apply(null, args));}" script)
         ^Value f (.eval ctx "js" wrapped-script)]
-    (fn [& vals] (.asString (.execute f (object-array vals))))))
+    (fn [& vals]
+      (locking ctx
+        (.asString (.execute f (object-array vals)))))))
 
 (comment
   (time
