@@ -47,6 +47,11 @@
                                                                 :request_headers
                                                                 :x-search-session-id
                                                                 first)
+                                       :x_anon_id           (-> query-log-entry
+                                                                :_source
+                                                                :request_headers
+                                                                :x-anon-id
+                                                                first)
                                        :query_body          (-> query-log-entry :_source :request)
                                        :query-timestamp     (str (Instant/ofEpochMilli
                                                                    (-> query-log-entry
