@@ -30,7 +30,7 @@
 
 (deftest multithreaded-js
   (let [data (json/encode {"foo" "bar"})
-        tf (polyglot.js/script->transform-fn
+        tf (js/script->transform-fn
              "(s) => {
                s['foo'] = 'corge';
                return s;
