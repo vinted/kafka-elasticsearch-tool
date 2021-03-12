@@ -1,7 +1,8 @@
 (ns cli
   (:require [clojure.string :as str]
             [clojure.tools.cli :as clojure.cli]
-            [cli.operation :as operation]))
+            [cli.operation :as operation]
+            [core.maps :as maps]))
 
 (defn op-names [operations]
   (str "["
@@ -22,8 +23,6 @@
 (defn find-operation [operation-name operations]
   (first (filter (fn [op] (= (name operation-name) (:name op))) operations)))
 
-(defn remove-nil-vals [m] (into {} (filter second m)))
-
 (defn recursive-parse
   [args commands]
   (let [{:keys [arguments] :as o} (clojure.cli/parse-opts args (cli-options commands)
@@ -34,10 +33,10 @@
                 (if command
                   (assoc o :operation {:name (keyword subcommand)
                                        :conf (-> (operation/parse-opts args (:defaults command) subcommand)
-                                                 (update :options remove-nil-vals))})
+                                                 (update :options maps/remove-nil-vals))})
                   (assoc o :operation {:errors [(format "Subcommand '%s' does not exist" subcommand)]})))
               o)
-            :options remove-nil-vals)))
+            :options maps/remove-nil-vals)))
 
 (comment
   (cli/recursive-parse ["server" "--port" "8080"] core/cli-operations)

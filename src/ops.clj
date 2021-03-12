@@ -8,6 +8,7 @@
             [ops.krp-to-ndjson :as krp-to-ndjson]
             [replay.core :as replay]
             [replay.deep :as replay.deep]
+            [replay.impact :as replay.impact]
             [polyglot :as polyglot]))
 
 (def operations
@@ -54,4 +55,8 @@
    {:name       "polyglot"
     :handler-fn polyglot/apply-transformation
     :docs       (:doc (meta #'polyglot/apply-transformation))
-    :defaults   polyglot/polyglot-defaults}])
+    :defaults   polyglot/polyglot-defaults}
+   {:name       "replay-for-impact"
+    :handler-fn replay.impact/execute
+    :docs       (:doc (meta #'replay.impact/execute))
+    :defaults   replay.impact/defaults}])

@@ -1,6 +1,7 @@
 (ns cli.operation
   (:require [clojure.string :as str]
             [clojure.tools.cli :as tools-cli]
+            [core.maps :as maps]
             [server :as server]))
 
 (defn non-scalar? [value] (map? value))
@@ -43,8 +44,6 @@
      ["-f" "--config-file CONFIG_FILE" "Path to the JSON file with operation config"]
      ["-h" "--help"]]))
 
-(defn remove-nil-vals [m] (into {} (filter second m)))
-
 (defn parse-opts [args defaults operation-name]
   (let [{:keys [arguments] :as parsed} (tools-cli/parse-opts args (operation-opts defaults)
                                                              :in-order true)]
@@ -62,7 +61,7 @@
                                                                       :in-order true)]
             (recur unprocessed-args
                    (-> parsed-opts
-                       (update :options assoc param-name (remove-nil-vals subcommand-options))
+                       (update :options assoc param-name (maps/remove-nil-vals subcommand-options))
                        (update :options (fn [options] (if (:help subcommand-options)
                                                         (assoc options :help true)
                                                         options)))

@@ -1,9 +1,12 @@
 (ns polyglot.sci
   (:require [sci.core :as sci]
-            [core.json :as json]))
+            [core.json :as json])
+  (:import (java.util UUID Date)))
 
 (defn sci-compile [^String script]
-  (sci/eval-string script))
+  (sci/eval-string script
+                   {:classes {'java.util.UUID java.util.UUID
+                              'java.util.Date java.util.Date}}))
 
 (defn script->transform-fn [script]
   (let [transform-fn (sci-compile script)]
@@ -24,4 +27,6 @@
       (apply transform-fn args))))
 
 (comment
-  ((polyglot.sci/script->transform-fn-for-boost "(fn [& args] args)") 1 2 3))
+  ((polyglot.sci/script->transform-fn-for-boost "(fn [& args] args)") 1 2 3)
+
+  ((polyglot.sci/script->transform-fn-for-boost "(fn [& args] (java.util.Date.))") 1 2 3))

@@ -24,7 +24,7 @@
 
 (defn compile-transforms [transformations]
   (map (fn [transformation]
-         (assoc transformation :fn (case (:lang transformation)
+         (assoc transformation :fn (case (keyword (:lang transformation))
                                      :js (js/script->transform-fn-vals (:script transformation))
                                      :sci (sci/sci-compile (:script transformation))
                                      (throw (Exception. (format "Language code '%s' is not supported"
@@ -36,7 +36,7 @@
          (let [fns-to-apply (map (fn [with-fn] [(:lang with-fn) (:fn with-fn) (:value with-fn)]) variation)]
            {:variation variation
             :request   (reduce (fn [acc [lang afn aval]]
-                                 (case lang
+                                 (case (keyword lang)
                                    :sci (afn acc aval)
                                    ; first param to js transformation should be json string
                                    ; js transformation always returns a string

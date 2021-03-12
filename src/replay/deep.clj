@@ -34,23 +34,33 @@
                                        :strategy doc-fetch-strategy}})]
         (sink/store! (map (fn [resp rank]
                             {:key     (format "%s:%s:%s" (:id replay-conf) (:_id query-log-entry) rank)
-                             :value   {:replay_id        (:id replay-conf)
-                                       :query_log_host   query-log-host
-                                       :query_log_id     (:_id query-log-entry)
-                                       :x_user_id        (-> query-log-entry
-                                                             :_source
-                                                             :request_headers
-                                                             :x-user-id
-                                                             first)
-                                       :query_body       (-> query-log-entry :_source :request)
-                                       :query-timestamp  (str (Instant/ofEpochMilli
-                                                                (-> query-log-entry
-                                                                    :_source
-                                                                    :header.timestamp)))
-                                       :replay-timestamp (str (Instant/now))
-                                       :replay_host      dest-es-host
-                                       :rank             rank
-                                       :hit              resp}
+                             :value   {:replay_id           (:id replay-conf)
+                                       :query_log_host      query-log-host
+                                       :query_log_id        (:_id query-log-entry)
+                                       :x_user_id           (-> query-log-entry
+                                                                :_source
+                                                                :request_headers
+                                                                :x-user-id
+                                                                first)
+                                       :x_search_session_id (-> query-log-entry
+                                                                :_source
+                                                                :request_headers
+                                                                :x-search-session-id
+                                                                first)
+                                       :x_anon_id           (-> query-log-entry
+                                                                :_source
+                                                                :request_headers
+                                                                :x-anon-id
+                                                                first)
+                                       :query_body          (-> query-log-entry :_source :request)
+                                       :query-timestamp     (str (Instant/ofEpochMilli
+                                                                   (-> query-log-entry
+                                                                       :_source
+                                                                       :header.timestamp)))
+                                       :replay-timestamp    (str (Instant/now))
+                                       :replay_host         dest-es-host
+                                       :rank                rank
+                                       :hit                 resp}
                              :headers {}})
                           hits (range))
                      conf)

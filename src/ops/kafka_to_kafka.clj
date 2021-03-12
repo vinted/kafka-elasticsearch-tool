@@ -6,9 +6,11 @@
   {:max_docs 5
    :source   {:implementation    :kafka
               :bootstrap.servers "127.0.0.1:9092"
+              :topic             nil
               :decode-value?     false}
    :sink     {:implementation    :kafka
               :bootstrap.servers "127.0.0.1:9092"
+              :topic             nil
               :encode-value?     false}})
 
 (defn execute

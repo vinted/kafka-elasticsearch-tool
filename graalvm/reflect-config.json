@@ -1,5 +1,13 @@
 [
   {
+    "name":"java.util.UUID",
+    "allPublicFields":true
+  },
+  {
+    "name":"java.util.Date",
+    "allPublicFields":true
+  },
+  {
     "name":"org.apache.kafka.clients.consumer.ConsumerConfig",
     "allPublicFields":true
   },

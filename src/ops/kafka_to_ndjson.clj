@@ -4,9 +4,10 @@
             [source :as source]))
 
 (def default-kafka-ndjson-config
-  {:max_docs nil
+  {:max_docs 1
    :source   {:implementation    :kafka
               :bootstrap.servers "127.0.0.1:9092"
+              :topic             nil
               :decode-value?     true}
    :sink     {:implementation :file}})
 
