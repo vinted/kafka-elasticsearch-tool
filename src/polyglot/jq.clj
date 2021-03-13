@@ -38,8 +38,13 @@
 
   ;; Collect all the keys from an array of maps to an array
   (let [tf (polyglot.jq/script->transform-fn-vals "[.[] | keys] | add")]
-    (tf "{\"a\": 1}" "{\"b\": 2}"))
+    (tf "{\"a\": 1}" {:b 2}))
   ;; => ["a","b"]
+
+  ;; Assoc attribute e with the value of second arg to the first argument
+  (let [tf (polyglot.jq/script->transform-fn-vals ". as [$first_arg, $second_arg] | $first_arg | .e = $second_arg")]
+    (tf "{\"a\": 1}" {:b 2}))
+  ;; => {"a":1,"e":{"b":2}}
 
   ;; Work with an array of elements
   (let [tf (polyglot.jq/script->transform-fn-vals
