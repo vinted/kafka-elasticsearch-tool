@@ -42,6 +42,12 @@
     [[nil "--defaults" "Print to STDOUT the default configuration of the operation"]
      [nil "--docs" "Print to STDOUT the docstring of the operation"]
      ["-f" "--config-file CONFIG_FILE" "Path to the JSON file with operation config"]
+     [nil "--override OVERRIDE" "JQ scripts to be applied on the config file"
+      :multi true
+      :update-fn conj
+      :default []]
+     [nil "--dry-run" "After construction of config instead of executing the operation prints config to stdout and exits."
+      :default false]
      ["-h" "--help"]]))
 
 (defn parse-opts [args defaults operation-name]
