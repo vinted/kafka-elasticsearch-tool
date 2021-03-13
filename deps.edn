@@ -7,6 +7,8 @@
   borkdude/sci                                {:mvn/version "0.2.1"}
   borkdude/sci.impl.reflector                 {:mvn/version "0.0.1-java11"}
   lt.jocas/lazy-elasticsearch-scroll          {:mvn/version "1.0.16"}
+  lt.jocas/clj-jq                             {:mvn/version "1.0.0"
+                                               :exclusions [com.fasterxml.jackson.core/jackson-databind]}
   http-kit/http-kit                           {:mvn/version "2.5.0"}
   metosin/reitit                              {:mvn/version "0.5.10"}
   io.confluent/kafka-connect-elasticsearch    {:mvn/version "10.0.0"}
@@ -27,9 +29,9 @@
  {:dev
   {:extra-paths ["dev" "classes" "test" "test/resources"]
    :extra-deps  {org.clojure/tools.deps.alpha {:mvn/version "0.10.889"
-                                               :exclusions [org.slf4j/slf4j-log4j12
-                                                            org.slf4j/slf4j-api
-                                                            org.slf4j/slf4j-nop]}
+                                               :exclusions  [org.slf4j/slf4j-log4j12
+                                                             org.slf4j/slf4j-api
+                                                             org.slf4j/slf4j-nop]}
                  criterium/criterium          {:mvn/version "0.4.6"}}}
   :test
   {:extra-paths ["test" "test/resources"]
