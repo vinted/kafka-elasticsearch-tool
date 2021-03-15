@@ -8,6 +8,10 @@ lint:
 unit-test:
 	clojure -M:test --exclude :integration
 
+.PHONY: check-deps
+check-deps:
+	clojure -Sdeps '{:deps {antq/antq {:mvn/version "RELEASE"}}}' -M -m antq.core
+
 .PHONY: integration-test
 integration-test:
 	clojure -M:test --include :integration

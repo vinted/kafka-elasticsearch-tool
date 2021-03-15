@@ -3,33 +3,35 @@
  :mvn/repos
  {"confluence" {:url "http://packages.confluent.io/maven/"}}
  :deps
- {org.clojure/clojure                         {:mvn/version "1.10.2"}
+ {org.clojure/clojure                         {:mvn/version "1.10.3"}
   borkdude/sci                                {:mvn/version "0.2.1"}
   borkdude/sci.impl.reflector                 {:mvn/version "0.0.1-java11"}
   lt.jocas/lazy-elasticsearch-scroll          {:mvn/version "1.0.16"}
+  lt.jocas/clj-jq                             {:mvn/version "1.0.0"
+                                               :exclusions [com.fasterxml.jackson.core/jackson-databind]}
   http-kit/http-kit                           {:mvn/version "2.5.0"}
   metosin/reitit                              {:mvn/version "0.5.10"}
   io.confluent/kafka-connect-elasticsearch    {:mvn/version "10.0.0"}
-  org.apache.kafka/connect-api                {:mvn/version "2.6.0"}
-  org.apache.kafka/connect-json               {:mvn/version "2.6.0"}
+  org.apache.kafka/connect-api                {:mvn/version "2.7.0"}
+  org.apache.kafka/connect-json               {:mvn/version "2.7.0"}
   org.clojure/tools.logging                   {:mvn/version "1.1.0"}
-  org.clojure/tools.cli                       {:mvn/version "1.0.194"}
+  org.clojure/tools.cli                       {:mvn/version "1.0.206"}
   org.clojure/core.async                      {:mvn/version "1.3.610"}
   ch.qos.logback/logback-core                 {:mvn/version "1.2.3"}
   ch.qos.logback/logback-classic              {:mvn/version "1.2.3"}
   ch.qos.logback.contrib/logback-json-classic {:mvn/version "0.1.5"}
   ch.qos.logback.contrib/logback-jackson      {:mvn/version "0.1.5"}
-  io.quarkus/quarkus-kafka-client             {:mvn/version "1.9.2.Final"
+  io.quarkus/quarkus-kafka-client             {:mvn/version "1.12.2.Final"
                                                :exclusions  [org.jboss.slf4j/slf4j-jboss-logging
-                                                             org.jboss.logging/jboss-logging]}}
+                                                             org.jboss.logging/jboss-logging
+                                                             org.jboss.slf4j/slf4j-jboss-logmanager]}}
  :aliases
  {:dev
   {:extra-paths ["dev" "classes" "test" "test/resources"]
-   :extra-deps  {org.clojure/tools.deps.alpha {:git/url    "https://github.com/clojure/tools.deps.alpha.git"
-                                               :sha        "f6c080bd0049211021ea59e516d1785b08302515"
-                                               :exclusions [org.slf4j/slf4j-log4j12
-                                                            org.slf4j/slf4j-api
-                                                            org.slf4j/slf4j-nop]}
+   :extra-deps  {org.clojure/tools.deps.alpha {:mvn/version "0.10.889"
+                                               :exclusions  [org.slf4j/slf4j-log4j12
+                                                             org.slf4j/slf4j-api
+                                                             org.slf4j/slf4j-nop]}
                  criterium/criterium          {:mvn/version "0.4.6"}}}
   :test
   {:extra-paths ["test" "test/resources"]
@@ -37,11 +39,11 @@
                                             :sha     "028a6d41ac9ac5d5c405dfc38e4da6b4cc1255d5"}}
    :main-opts   ["-m" "cognitect.test-runner"]}
   :clj-kondo
-  {:main-opts  ["-m" "clj-kondo.main --lint src test"]
+  {:main-opts  ["-m" "clj-kondo.main" "--lint" "src" "test"]
    :extra-deps {clj-kondo/clj-kondo {:mvn/version "2021.03.03"}}
    :jvm-opts   ["-Dclojure.main.report=stderr"]}
   :native-ket
-  {:main-opts  ["-m clj.native-image core"
+  {:main-opts  ["-m" "clj.native-image" "core"
                 "--enable-https"
                 "--no-fallback"
                 "--language:js"
@@ -67,4 +69,4 @@
                 {:git/url    "https://github.com/taylorwood/clj.native-image.git"
                  :exclusions [commons-logging/commons-logging
                               org.slf4j/slf4j-nop]
-                 :sha        "7708e7fd4572459c81f6a6b8e44c96f41cdd92d4"}}}}}
+                 :sha        "f3e40672d5c543b80a2019c1f07b2d3fe785962c"}}}}}

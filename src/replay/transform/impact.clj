@@ -1,6 +1,7 @@
 (ns replay.transform.impact
   (:require [polyglot.sci :as sci]
             [polyglot.js :as js]
+            [polyglot.jq :as jq]
             [core.json :as json]))
 
 (defn cart [colls]
@@ -27,6 +28,7 @@
          (assoc transformation :fn (case (keyword (:lang transformation))
                                      :js (js/script->transform-fn-vals (:script transformation))
                                      :sci (sci/sci-compile (:script transformation))
+                                     :jq (jq/script->transform-fn-vals (:script transformation))
                                      (throw (Exception. (format "Language code '%s' is not supported"
                                                                 (:lang transformation)))))))
        transformations))
@@ -42,6 +44,7 @@
                                    ; js transformation always returns a string
                                    ; we need to decode the response string
                                    :js (json/decode (afn (json/encode acc) aval))
+                                   :jq (json/decode (afn (json/encode acc) aval))
                                    (throw (Exception. (format "Language code '%s' is not supported" lang)))))
                                query-map
                                fns-to-apply)})) transform-variations))
@@ -69,4 +72,5 @@
     [{:lang :sci :id :a :script "(fn [query value] (assoc query :a value))" :vals [1 2 3]}
      {:lang :sci :id :b :script "(fn [query value] (assoc query :b value))" :vals [10 20 30]}
      {:lang :sci :id :c :script "(fn [query value] (assoc query :c value))" :vals [100 200 300]}
-     {:lang :js :id :d :script "(query, value) => { query['d'] = value; return query; }" :vals ["a" "b" "c"]}]))
+     {:lang :js :id :d :script "(query, value) => { query['d'] = value; return query; }" :vals ["a" "b" "c"]}
+     {:lang :jq :id :d :script ". as [$query, $value] | $query | .e = $value" :vals ["X" "Y" "Z"]}]))
