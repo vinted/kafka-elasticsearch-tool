@@ -59,7 +59,7 @@
           (if (or (:help options) (empty? options))
             (println (format "Help for '%s':\n" (name operation-name)) summary)
             (let [configs-from-file (read-config-file (:config-file options) (:override options))
-                  combined-conf (dm/deep-merge configs-from-file (dissoc options :override :config-file))]
+                  combined-conf (dm/deep-merge configs-from-file (dissoc options :override :config-file :dry-run))]
               (if (or dry-run? (:dry-run options))
                 (println (json/encode combined-conf))
                 (execute-op operation-name combined-conf cli-operations)))))))
