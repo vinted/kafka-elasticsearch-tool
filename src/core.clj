@@ -74,7 +74,9 @@
   (let [{:keys [options summary errors arguments] :as cli-opts} (cli/recursive-parse args cli-operations)]
     (if errors
       (println errors)
-      (if (or (get options :help) (and (empty? options) (empty? arguments)))
+      (if (or (get options :help)
+              (and (empty? options) (empty? arguments))
+              (empty? args))
         (println summary)
         (handle-subcommand cli-opts cli-operations)))))
 
