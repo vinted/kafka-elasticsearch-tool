@@ -16,15 +16,16 @@
   (first (filter (fn [op] (= (name operation-name) (:name op))) cli-operations)))
 
 (defn read-config-file [config-file jq-overrides]
-  (if (and config-file (.exists (io/file config-file)))
-    (if (seq jq-overrides)
-      (let [^String file-contents (slurp config-file)]
-        (json/decode (jq/execute file-contents (str/join " | " jq-overrides))))
-      (json/read-file config-file))
-    (do
-      (when config-file
-        (log/warnf "Config file '%s' does not exists" config-file))
-      {})))
+  (let [combined-jq-overrides (str/join " | " jq-overrides)]
+    (if (and config-file (.exists (io/file config-file)))
+      (if (seq jq-overrides)
+        (let [^String file-contents (slurp config-file)]
+          (json/decode (jq/execute file-contents combined-jq-overrides)))
+        (json/read-file config-file))
+      (do
+        (if config-file
+          (throw (Exception. (format "Config file '%s' does not exists" config-file)))
+          (json/decode (jq/execute "{}" combined-jq-overrides)))))))
 
 (defn execute-op [operation-name options cli-operations]
   (if operation-name
@@ -64,8 +65,7 @@
                 (println (json/encode combined-conf))
                 (execute-op operation-name combined-conf cli-operations)))))))
     (catch Exception e
-      (println (format "Failed to execute with exception:\n '%s'" e))
-      (.printStackTrace e))))
+      (log/errorf "Failed to execute with exception: '%s'" e))))
 
 (def cli-operations
   (concat ops/operations ops-overrides/cli))
@@ -74,7 +74,9 @@
   (let [{:keys [options summary errors arguments] :as cli-opts} (cli/recursive-parse args cli-operations)]
     (if errors
       (println errors)
-      (if (or (get options :help) (and (empty? options) (empty? arguments)))
+      (if (or (get options :help)
+              (and (empty? options) (empty? arguments))
+              (empty? args))
         (println summary)
         (handle-subcommand cli-opts cli-operations)))))
 
