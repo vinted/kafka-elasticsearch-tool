@@ -41,7 +41,7 @@
      :headers r/default-headers}))
 
 (defn get-baseline-ratings [url query-body pit k ignore-timeouts]
-  (let [baseline-resp (get-baseline (str url "&timeout=1ms") query-body pit k)]
+  (let [baseline-resp (get-baseline url query-body pit k)]
     (when (and (:timed_out baseline-resp) (not ignore-timeouts))
       (throw (Exception. (format "Request to get baseline ratings timed-out. %s" baseline-resp))))
     (map (fn [hit]
