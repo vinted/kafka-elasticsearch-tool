@@ -79,7 +79,7 @@
                                                     (update variation-map :value str))
                                                   (:variation variation))
                          :query              (json/encode (:request variation))
-                         :failures           failures
+                         :failures           (json/encode failures)
                          :impact             (float (- 1 (:metric_score (variation-id details))))
                          :average-impact     (float (- 1 metric_score))
                          :hit-count          (count (get-in details [variation-id :hits]))
@@ -146,26 +146,26 @@
 (comment
   (replay.impact/execute
     {:max_docs 1
-     :source   {:remote {:host "http://janitor.vinted.net:9200"}
+     :source   {:remote {:host "http://localhost:9200"}
                 :index  "query_logs"
                 :query  {:query           {:bool
                                            {:filter
                                             [{:term {:query_from {:value 0}}}
                                              {:range {:header.timestamp {:gte "now-2d"}}}
                                              {:match {:request "multi_match"}}
-                                             {:prefix {:uri.keyword "/fr-core-items/_search"}}]
+                                             {:prefix {:uri.keyword "/index-name/_search"}}]
                                             :must_not
                                             [{:exists {:field "query_sort"}}]}}
                          :sort            [{:header.timestamp {:order :asc}}]
                          :docvalue_fields ["uri.index"]
                          :size            1}}
-     :replay   {:connection.url   "http://bn-elastic-replay1.vinted.net:9201"
+     :replay   {:connection.url   "http://localhost:9200"
                 :concurrency      10
                 :top-k            100
                 :query-transforms [{:id     "jq-test"
                                     :lang   :jq
                                     :script ". as [$query, $value] | $query | .size = $value"
-                                    :vals   [1 10 100 1000]}
+                                    :vals   [1 10 100]}
                                    {:id     "test2"
                                     :lang   :js
                                     :script "(query, value) => { query['from'] = value; return query; }"
