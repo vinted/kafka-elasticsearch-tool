@@ -71,8 +71,12 @@ NOTE: if configuration file is not provided, then empty configuration `{}` is as
 
 ## Environment variables
 
-With environment variables only one aspect can be configured: logging level. E.g.:
-
+With environment variables thee aspects can be configured: 
+- logging level. E.g.:
 ```shell
 ROOT_LOGGER_LEVEL=WARN ./ket operation -f config.json
+```
+- Debug mode which prints stack traces in case of any exceptions:
+```shell
+DEBUG_MODE=true ./ket operation -f config.json
 ```
