@@ -1,5 +1,5 @@
 (ns replay.impact-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is testing]]
             [replay.impact :as impact]))
 
 (deftest index-name-extraction
@@ -108,3 +108,32 @@
                                        :query {:match_all {}}
                                        :size  10}})}
            (impact/prepare-rank-eval-request ratings grouped-variations metric pit)))))
+
+(deftest metric-resolution
+  (testing "default k is 10 and metric is precision"
+    (is (= {:precision
+            {:ignore_unlabeled          false
+             :k                         10
+             :relevant_rating_threshold 1}}
+           (impact/get-metric {:replay {}}))))
+  (testing "default metric to be precision with k being top-k"
+    (is (= {:precision
+            {:ignore_unlabeled          false
+             :k                         5
+             :relevant_rating_threshold 1}}
+           (impact/get-metric {:replay {:top-k 5}}))))
+  (testing "metric to be dcg"
+    (is (= {:dcg {:k         10
+                  :normalize false}}
+           (impact/get-metric {:replay {:metric {:dcg {}}}}))))
+  (testing "metric to be dcg with non supported attributes removed"
+    (is (= {:dcg {:k         10
+                  :normalize false}}
+           (impact/get-metric {:replay {:metric {:dcg {:foo "bar"}}}}))))
+
+  (testing "on non supported metrics an exception is thrown"
+    (is (= :exception (try
+                        (impact/get-metric {:replay {:metric {:foo {}}}})
+                        (catch Exception e
+                          (is (instance? Exception e))
+                          :exception))))))
