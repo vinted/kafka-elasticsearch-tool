@@ -25,7 +25,9 @@
       (do
         (if config-file
           (throw (Exception. (format "Config file '%s' does not exists" config-file)))
-          (json/decode (jq/execute "{}" combined-jq-overrides)))))))
+          (json/decode (if (seq jq-overrides)
+                         (jq/execute "{}" combined-jq-overrides)
+                         "{}")))))))
 
 (defn execute-op [operation-name options cli-operations]
   (if operation-name
@@ -36,7 +38,10 @@
       (println
         (json/encode
           (if-let [msg (if (empty? resp)
-                         ((:handler-fn operation) options)
+                         (if (empty? options)
+                           (throw (Exception. (format "Configuration for the operation '%s' is bad: '%s'"
+                                                      (name operation-name) options)))
+                           ((:handler-fn operation) options))
                          resp)]
             msg
             (format "Operation '%s' is finished" (name operation-name))))))
@@ -65,7 +70,9 @@
                 (println (json/encode combined-conf))
                 (execute-op operation-name combined-conf cli-operations)))))))
     (catch Exception e
-      (log/errorf "Failed to execute with exception: '%s'" e))))
+      (log/errorf "Failed to execute with exception: '%s'" e)
+      (when (System/getenv "DEBUG_MODE")
+        (.printStackTrace e)))))
 
 (def cli-operations
   (concat ops/operations ops-overrides/cli))
