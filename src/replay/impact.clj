@@ -98,19 +98,58 @@
                  (assoc-in [:_source :impact] impact))))
          variation-ids)))
 
+; https://www.elastic.co/guide/en/elasticsearch/reference/current/search-rank-eval.html
+(def defaults-metric-configs
+  {:precision                {:k                         10
+                              :relevant_rating_threshold 1
+                              :ignore_unlabeled          false}
+   :recall                   {:k                         10
+                              :relevant_rating_threshold 1}
+   :mean_reciprocal_rank     {:k                         10
+                              :relevant_rating_threshold 1}
+   :dcg                      {:k         10
+                              :normalize false}
+   :expected_reciprocal_rank {:maximum_relevance 10
+                              :k                 10}})
+
+(defn get-top-k
+  "First check an explicit parameter then if it is provided in the metric.
+  If not found throws an exception"
+  [opts]
+  (or (get-in opts [:replay :top-k])
+      (-> opts :replay :metric first last :k)
+      10))
+
+(defn get-metric
+  "Get the provided metric and merges it onto the default metric config."
+  [opts]
+  (let [k (get-top-k opts)
+        provided-metric (get-in opts [:replay :metric])
+        metric-name (ffirst provided-metric)
+        provided-metric-config (get provided-metric metric-name)
+        default-metric-config (if metric-name
+                                (get defaults-metric-configs metric-name)
+                                (get defaults-metric-configs :precision))]
+    (when (nil? default-metric-config)
+      (throw (Exception. (format "Metric '%s' not supported by _rank_eval API. '%s'."
+                                 (name metric-name) (get opts :replay)))))
+    {(or metric-name :precision)
+     (merge default-metric-config
+            (select-keys (assoc provided-metric-config :k k)
+                         (keys default-metric-config)))}))
+
 (defn measure-impact [opts query-log-entry]
   (let [target-es-host (get-in opts [:replay :connection.url])
         raw-endpoint (get-in query-log-entry [:_source :uri])
         target-index (or (get-in opts [:replay :target-index]) (get-index-or-alias raw-endpoint))
-        k (get-in opts [:replay :top-k])
+        k (get-top-k opts)
         query-body (json/decode (get-in query-log-entry [:_source :request]))
-        metric {:precision {:k k :relevant_rating_threshold 1 :ignore_unlabeled false}}
+        metric (get-metric opts)
         pit (assoc (pit/init target-es-host target-index opts) :keep_alive "30s")
         baseline-ratings-url (format "%s%s" target-es-host (prepare-endpoint raw-endpoint))
         baseline-ratings (get-baseline-ratings baseline-ratings-url query-body pit k (get-in opts [:replay :ignore-timeouts]))
         grouped-variations (get-grouped-query-variations query-body opts k)
         rank-eval-resp (query-rank-eval-api target-es-host target-index baseline-ratings grouped-variations metric pit)]
-    (println baseline-ratings)
     (construct-rfi-records rank-eval-resp query-log-entry grouped-variations baseline-ratings k)))
 
 (def defaults
@@ -128,6 +167,7 @@
             :connection.url   "http://localhost:9200"
             :target-index     nil
             :concurrency      1
+            :metric           nil
             :ignore-timeouts  false}
    :sink {:connection.url "http://localhost:9200"
           :dest.index     "impact_sink_index"
