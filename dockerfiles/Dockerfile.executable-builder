@@ -2,7 +2,7 @@ FROM findepi/graalvm:java11-native as BUILDER
 
 ENV GRAALVM_HOME=/graalvm
 ENV JAVA_HOME=/graalvm
-ENV CLOJURE_VERSION=1.10.2.774
+ENV CLOJURE_VERSION=1.10.3.814
 
 RUN apt-get install -y curl \
     && gu install native-image \
