@@ -150,6 +150,7 @@
         baseline-ratings (get-baseline-ratings baseline-ratings-url query-body pit k (get-in opts [:replay :ignore-timeouts]))
         grouped-variations (get-grouped-query-variations query-body opts k)
         rank-eval-resp (query-rank-eval-api target-es-host target-index baseline-ratings grouped-variations metric pit)]
+    (log/infof "RFI metric used: '%s'" metric)
     (construct-rfi-records rank-eval-resp query-log-entry grouped-variations baseline-ratings k)))
 
 (def defaults
