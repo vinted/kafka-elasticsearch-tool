@@ -17,22 +17,24 @@
 (defn get-index-or-alias [endpoint]
   (last (re-find #"^/(.*)/_search" endpoint)))
 
-(defn prepare-endpoint [^String endpoint]
+(defn prepare-endpoint
+  "Prepares the endpoint for PIT queries: remove preference, routing, index name."
+  [^String endpoint]
   (transform.uri/transform-uri
     endpoint
-    [{:match "preference=[^&]*&?"
+    [{:match "preference=[^&]*&?"                           ;; Remove preference string
       :replacement ""}
-     {:match "routing=[^&]*&?"
+     {:match "routing=[^&]*&?"                              ;; Remove routing parameter
       :replacement ""}
-     {:match "^(/.*)(/.*)"
+     {:match "^(/.*)(/.*)"                                  ;; Remove original index because PIT doesn't allow it
       :replacement "$2"}
-     {:match "\\?$"
+     {:match "\\?$"                                         ;; Remove trailing question mark
       :replacement ""}]))
 
 (defn generate-queries [opts query-body]
   (impact-transform/generate-queries query-body (get-in opts [:replay :query-transforms])))
 
-(defn get-baseline [^String url query-body pit k]
+(defn get-baseline-resp [^String url query-body pit k]
   (r/execute-request
     {:url     url
      :body    (assoc query-body :pit pit :size k)
@@ -41,7 +43,7 @@
      :headers r/default-headers}))
 
 (defn get-baseline-ratings [url query-body pit k ignore-timeouts]
-  (let [baseline-resp (get-baseline url query-body pit k)]
+  (let [baseline-resp (get-baseline-resp url query-body pit k)]
     (when (and (:timed_out baseline-resp) (not ignore-timeouts))
       (throw (Exception. (format "Request to get baseline ratings timed-out. %s" baseline-resp))))
     (map (fn [hit]
@@ -53,16 +55,19 @@
        (map (fn [qv] (update qv :request assoc :size k)))
        (group-by (fn [query-variation] (json/encode (:variation query-variation))))))
 
+(defn prepare-rank-eval-request [ratings grouped-variations metric pit]
+  {:requests (map (fn [[id [{request :request}]]]
+                    {:id      id
+                     :request (assoc request :pit pit)
+                     :ratings ratings})
+                  grouped-variations)
+   :metric   metric})
+
 (defn query-rank-eval-api [target-es-host target-index ratings grouped-variations metric pit]
   (let [target-url (format "%s/%s/_rank_eval" target-es-host target-index)]
     (r/execute-request
       {:url     target-url
-       :body    {:requests (map (fn [[id [{request :request}]]]
-                                  {:id      id
-                                   :request (assoc request :pit pit)
-                                   :ratings ratings})
-                                grouped-variations)
-                 :metric   metric}
+       :body    (prepare-rank-eval-request ratings grouped-variations metric pit)
        :opts    (assoc r/default-exponential-backoff-params :keywordize? true)
        :method  :get
        :headers r/default-headers})))
@@ -96,15 +101,16 @@
 (defn measure-impact [opts query-log-entry]
   (let [target-es-host (get-in opts [:replay :connection.url])
         raw-endpoint (get-in query-log-entry [:_source :uri])
-        target-index (get-index-or-alias raw-endpoint)
-        baseline-url (format "%s%s" target-es-host (prepare-endpoint raw-endpoint))
+        target-index (or (get-in opts [:replay :target-index]) (get-index-or-alias raw-endpoint))
         k (get-in opts [:replay :top-k])
         query-body (json/decode (get-in query-log-entry [:_source :request]))
         metric {:precision {:k k :relevant_rating_threshold 1 :ignore_unlabeled false}}
         pit (assoc (pit/init target-es-host target-index opts) :keep_alive "30s")
-        baseline-ratings (get-baseline-ratings baseline-url query-body pit k (get-in opts [:replay :ignore-timeouts]))
+        baseline-ratings-url (format "%s%s" target-es-host (prepare-endpoint raw-endpoint))
+        baseline-ratings (get-baseline-ratings baseline-ratings-url query-body pit k (get-in opts [:replay :ignore-timeouts]))
         grouped-variations (get-grouped-query-variations query-body opts k)
         rank-eval-resp (query-rank-eval-api target-es-host target-index baseline-ratings grouped-variations metric pit)]
+    (println baseline-ratings)
     (construct-rfi-records rank-eval-resp query-log-entry grouped-variations baseline-ratings k)))
 
 (def defaults
@@ -120,6 +126,7 @@
             :top-k            10
             :query-transforms []
             :connection.url   "http://localhost:9200"
+            :target-index     nil
             :concurrency      1
             :ignore-timeouts  false}
    :sink {:connection.url "http://localhost:9200"
