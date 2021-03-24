@@ -45,7 +45,7 @@
                          resp)]
             msg
             (format "Operation '%s' is finished" (name operation-name))))))
-    (log/warnf "Operation name was not provided")))
+    (throw (Exception. "Operation name was not provided"))))
 
 (defn handle-subcommand [{:keys [options] :as cli-opts} cli-operations]
   (try
@@ -62,17 +62,18 @@
               :as my-op} :operation} cli-opts]
         (if (seq errors)
           (println errors)
-          (if (or (:help options) (empty? options))
+          (if (and (or (:help options) (empty? options)) operation-name)
             (println (format "Help for '%s':\n" (name operation-name)) summary)
             (let [configs-from-file (read-config-file (:config-file options) (:override options))
                   combined-conf (dm/deep-merge configs-from-file (dissoc options :override :config-file :dry-run))]
               (if (or dry-run? (:dry-run options))
-                (println (json/encode combined-conf))
+                (println (json/encode (dissoc combined-conf :defaults :docs)))
                 (execute-op operation-name combined-conf cli-operations)))))))
     (catch Exception e
       (log/errorf "Failed to execute with exception: '%s'" e)
       (when (System/getenv "DEBUG_MODE")
-        (.printStackTrace e)))))
+        (.printStackTrace e))
+      (System/exit 1))))
 
 (def cli-operations
   (concat ops/operations ops-overrides/cli))
@@ -80,7 +81,9 @@
 (defn handle-cli [args]
   (let [{:keys [options summary errors arguments] :as cli-opts} (cli/recursive-parse args cli-operations)]
     (if errors
-      (println errors)
+      (do
+        (println errors)
+        (System/exit 1))
       (if (or (get options :help)
               (and (empty? options) (empty? arguments))
               (empty? args))
