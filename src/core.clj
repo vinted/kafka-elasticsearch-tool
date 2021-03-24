@@ -81,7 +81,9 @@
 (defn handle-cli [args]
   (let [{:keys [options summary errors arguments] :as cli-opts} (cli/recursive-parse args cli-operations)]
     (if errors
-      (println errors)
+      (do
+        (println errors)
+        (System/exit 1))
       (if (or (get options :help)
               (and (empty? options) (empty? arguments))
               (empty? args))
