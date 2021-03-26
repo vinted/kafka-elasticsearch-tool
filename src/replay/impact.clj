@@ -94,8 +94,7 @@
                          :original-hit-count (count baseline-ratings)
                          :details            (json/encode (get details variation-id))}]
              (-> query-log-entry
-                 (update :_id (fn [replay-log-entry-id]
-                                (str replay-log-entry-id "-" (hash variation-id) "-" (UUID/randomUUID))))
+                 (assoc :_id (UUID/randomUUID))
                  (assoc-in [:_source :query_log_entry_id] query-log-entry-id)
                  (assoc-in [:_source :impact] impact))))
          variation-ids)))
@@ -186,10 +185,10 @@
   (log/infof "Starting a replay for impact with conf: '%s'" conf)
   (let [replay-conf (prepare-replay-conf conf)
         concurrency (get-in replay-conf [:replay :concurrency])
-        queries (es/fetch conf)
+        query-log-entries (es/fetch conf)
         responses (async/map-pipeline (fn [query-log-entry]
                                         (measure-impact replay-conf query-log-entry))
-                                      concurrency queries)]
+                                      concurrency query-log-entries)]
     (es-sink/store! (apply concat responses) (:sink conf))))
 
 (comment
