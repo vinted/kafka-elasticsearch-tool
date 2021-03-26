@@ -32,3 +32,6 @@ build-ket:
 	docker rm ket-native-image-build || true
 	docker create --name ket-native-image-build ket-native-image
 	docker cp ket-native-image-build:/usr/src/app/ket ket
+
+build-docker:
+	docker build -f Dockerfile -t vinted/ket:2021.03.25 .

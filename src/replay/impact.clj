@@ -8,7 +8,8 @@
             [sink.elasticsearch.index :as es-sink]
             [source.elasticsearch :as es]
             [replay.transform.uri :as transform.uri]
-            [replay.transform.impact :as impact-transform]))
+            [replay.transform.impact :as impact-transform])
+  (:import (java.util UUID)))
 
 (set! *warn-on-reflection* true)
 
@@ -93,7 +94,8 @@
                          :original-hit-count (count baseline-ratings)
                          :details            (json/encode (get details variation-id))}]
              (-> query-log-entry
-                 (update :_id (fn [replay-log-entry-id] (str replay-log-entry-id "-" (hash variation-id))))
+                 (update :_id (fn [replay-log-entry-id]
+                                (str replay-log-entry-id "-" (hash variation-id) "-" (UUID/randomUUID))))
                  (assoc-in [:_source :query_log_entry_id] query-log-entry-id)
                  (assoc-in [:_source :impact] impact))))
          variation-ids)))
@@ -150,7 +152,6 @@
         baseline-ratings (get-baseline-ratings baseline-ratings-url query-body pit k (get-in opts [:replay :ignore-timeouts]))
         grouped-variations (get-grouped-query-variations query-body opts k)
         rank-eval-resp (query-rank-eval-api target-es-host target-index baseline-ratings grouped-variations metric pit)]
-    (log/infof "RFI metric used: '%s'" metric)
     (construct-rfi-records rank-eval-resp query-log-entry grouped-variations baseline-ratings k)))
 
 (def defaults
