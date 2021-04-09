@@ -164,7 +164,7 @@ Example configuration:
     }
   },
   "sink": {
-    "filename ": "es-docs.ndjson"
+    "filename": "es-docs.ndjson"
   }
 }
 ```
@@ -184,7 +184,7 @@ Example configuration:
     "impatient": true
   },
   "sink": {
-    "filename ": "es-docs.ndjson"
+    "filename": "es-docs.ndjson"
   }
 }
 ```
