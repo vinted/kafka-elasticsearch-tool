@@ -43,8 +43,6 @@
   },
   "sink" : {
     "index" : "dest-index-name",
-    "remote" : {
-      "host" : "http://localhost:9200"
-    }
+    "connection.url" : "http://localhost:9200"
   }
 }
