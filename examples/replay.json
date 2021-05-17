@@ -42,7 +42,7 @@
     "query_attr" : "request"
   },
   "sink" : {
-    "index" : "dest-index-name",
+    "dest.index" : "dest-index-name",
     "connection.url" : "http://localhost:9200"
   }
 }
