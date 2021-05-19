@@ -77,8 +77,7 @@
   (let [{:keys [details failures metric_score]} rank-eval-resp
         variation-ids (keys details)]
     (map (fn [variation-id]
-           (let [query-log-entry-id (get query-log-entry :_id)
-                 variation (first (get grouped-variations (name variation-id)))
+           (let [variation (first (get grouped-variations (name variation-id)))
                  impact {:top-k              k
                          :variation-id       (name variation-id)
                          :variation          (map (fn [variation-map]
@@ -95,7 +94,7 @@
                          :details            (json/encode (get details variation-id))}]
              (-> query-log-entry
                  (assoc :_id (UUID/randomUUID))
-                 (assoc-in [:_source :query_log_entry_id] query-log-entry-id)
+                 (assoc-in [:_source :query_log_entry_id] (get query-log-entry :_id))
                  (assoc-in [:_source :impact] impact))))
          variation-ids)))
 
