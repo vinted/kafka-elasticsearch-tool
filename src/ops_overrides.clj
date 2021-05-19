@@ -3,7 +3,9 @@
             [core.maps :as maps]
             [polyglot :as polyglot]
             [server :as server]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [ops.es-to-stdout :as es-to-stdout]
+            [ops.kafka-to-stdout :as kafka-to-stdout])
   (:import (java.io File)))
 
 
@@ -48,4 +50,12 @@
                           ["ALPHA."
                            (:doc (meta #'polyglot/apply-transformation))
                            (:doc (meta #'test-script-handler))])
-    :defaults   test-script-defaults}])
+    :defaults   test-script-defaults}
+   {:name       "kafka-to-stdout"
+    :handler-fn kafka-to-stdout/execute
+    :docs       (:doc (meta #'kafka-to-stdout/execute))
+    :defaults   kafka-to-stdout/default-opts}
+   {:name       "elasticsearch-to-stdout"
+    :handler-fn es-to-stdout/execute
+    :docs       (:doc (meta #'es-to-stdout/execute))
+    :defaults   es-to-stdout/default-opts}])
