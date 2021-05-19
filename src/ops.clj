@@ -6,6 +6,7 @@
             [ops.kafka-to-kafka :as kafka-to-kafka]
             [ops.kafka-to-ndjson :as kafka-to-ndjson]
             [ops.krp-to-ndjson :as krp-to-ndjson]
+            [ops.kafka-to-stdout :as kafka-to-stdout]
             [replay.core :as replay]
             [replay.deep :as replay.deep]
             [replay.impact :as replay.impact]
@@ -24,6 +25,10 @@
     :handler-fn kafka-to-es/kafka-to-es
     :docs       (:doc (meta #'kafka-to-es/kafka-to-es))
     :defaults   kafka-to-es/default-opts}
+   {:name       "kafka-to-stdout"
+    :handler-fn kafka-to-stdout/execute
+    :docs       (:doc (meta #'kafka-to-stdout/execute))
+    :defaults   kafka-to-stdout/default-opts}
    {:name       "elasticsearch-to-elasticsearch"
     :handler-fn es-to-es/reindex!
     :docs       (:doc (meta #'es-to-es/reindex!))

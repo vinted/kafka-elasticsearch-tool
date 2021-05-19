@@ -2,7 +2,8 @@
   (:require [clojure.tools.logging :as log]
             [sink.elasticsearch :as elasticsearch]
             [sink.file :as file]
-            [sink.kafka :as kafka]))
+            [sink.kafka :as kafka]
+            [sink.stdout :as stdout]))
 
 (defrecord KafkaRecord [key value headers])
 
@@ -12,4 +13,5 @@
       :kafka (kafka/store! records opts)
       :elasticsearch (elasticsearch/store! records opts)
       :file (file/store! records opts)
+      :stdout (stdout/store! records opts)
       (log/errorf "No such sink '%s' implementation!" sink-implementation-id))))
