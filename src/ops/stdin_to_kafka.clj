@@ -16,11 +16,6 @@
   (and (contains? record :_id)
        (contains? record :_source)))
 
-(defn kafka-record? [record]
-  (and (contains? record :key)
-       (contains? record :value)
-       (contains? record :headers)))
-
 (defn execute [opts]
   (sink/store!
     (map (fn [record]
