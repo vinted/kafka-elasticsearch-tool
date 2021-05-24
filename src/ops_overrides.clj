@@ -5,7 +5,8 @@
             [server :as server]
             [clojure.java.io :as io]
             [ops.es-to-stdout :as es-to-stdout]
-            [ops.kafka-to-stdout :as kafka-to-stdout])
+            [ops.kafka-to-stdout :as kafka-to-stdout]
+            [ops.stdin-to-es :as std-to-es])
   (:import (java.io File)))
 
 
@@ -58,4 +59,8 @@
    {:name       "elasticsearch-to-stdout"
     :handler-fn es-to-stdout/execute
     :docs       (:doc (meta #'es-to-stdout/execute))
-    :defaults   es-to-stdout/default-opts}])
+    :defaults   es-to-stdout/default-opts}
+   {:name       "stdin-to-elasticsearch"
+    :handler-fn std-to-es/execute
+    :docs       (:doc (meta #'std-to-es/execute))
+    :defaults   std-to-es/default-opts}])

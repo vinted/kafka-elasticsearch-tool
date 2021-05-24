@@ -11,6 +11,7 @@
         </layout>
     </appender>
     <logger name="org.apache" level="WARN"/>
+    <logger name="io.searchbox" level="WARN"/>
     <root level="${ROOT_LOGGER_LEVEL:-INFO}">
         <appender-ref ref="A1"/>
     </root>
