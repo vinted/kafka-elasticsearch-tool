@@ -112,8 +112,8 @@
                                (get-conf-val :dest-index sink-opts {}))
         already-encoded? (get-conf-val :already.encoded sink-opts {})]
     (when-not (ilm/index-exists? dest-host index-name)
-      (log/infof "Created index: %s" (ilm/create-index! dest-host index-name)))
-    (log/infof "Disabled index refresh interval: %s" (ilm/set-refresh-interval! dest-host index-name "-1"))
+      (log/debugf "Created index: %s" (ilm/create-index! dest-host index-name)))
+    (log/debugf "Disabled index refresh interval: %s" (ilm/set-refresh-interval! dest-host index-name "-1"))
     (.start bulk-processor)
     (r/fold
       (fn [& [_ record]]
@@ -131,7 +131,7 @@
       records)
     (.flush bulk-processor flush-timeout)
     (.stop bulk-processor)
-    (log/infof "Enabled index refresh interval: %s" (ilm/set-refresh-interval! dest-host index-name "1s"))))
+    (log/debugf "Enabled index refresh interval: %s" (ilm/set-refresh-interval! dest-host index-name "1s"))))
 
 (defrecord EsRecord [_id _source])
 

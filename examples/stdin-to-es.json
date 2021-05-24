@@ -1,0 +1,7 @@
+{
+  "max_docs": 1,
+  "sink": {
+    "connection.url": "http://localhost:9200",
+    "dest.index": "dest-index-name2"
+  }
+}

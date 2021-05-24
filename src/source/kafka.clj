@@ -229,8 +229,8 @@
                 :bootstrap.servers "127.0.0.1:9092"}})
 
   (fetch
-    {:max_docs 1
-     :source   {:topic             "test-topic"
+    {:max_docs 2
+     :source   {:topic             "stdin-to-kafka-test"
                 :bootstrap.servers "127.0.0.1:9092"
                 :impatient?        true
                 :retry-count       3}})
