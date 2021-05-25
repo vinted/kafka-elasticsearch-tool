@@ -42,11 +42,47 @@
   {:main-opts  ["-m" "clj-kondo.main" "--lint" "src" "test"]
    :extra-deps {clj-kondo/clj-kondo {:mvn/version "2021.03.03"}}
    :jvm-opts   ["-Dclojure.main.report=stderr"]}
-  :native-ket
+  :uberjar
+  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.216"}}
+   :exec-fn      hf.depstar/uberjar
+   :exec-args    {:aot true}}
+  :native-image-linux-static-musl
+  {:main-opts  ["-m" "clj.native-image" "core"
+                "--static"
+                "--libc=musl"
+                "--verbose"
+                "--enable-https"
+                "--no-fallback"
+                "--language:js"
+                "--allow-incomplete-classpath"
+                "--initialize-at-build-time"
+                "--enable-all-security-services"
+                "--initialize-at-run-time=org.httpkit.client.HttpClient"
+                "--initialize-at-run-time=org.httpkit.client.SslContextFactory"
+                "--report-unsupported-elements-at-runtime"
+                "-J-Dclojure.compiler.direct-linking=true"
+                "-H:ReflectionConfigurationFiles=graalvm/reflect-config.json"
+                ;; optional native image name override
+                "-H:+ReportExceptionStackTraces"
+                "-H:IncludeResources=logback.xml"
+                "-H:Name=ket"]
+   :jvm-opts   ["-Dclojure.compiler.direct-linking=true"]
+   :extra-deps {org.jboss.logging/commons-logging-jboss-logging
+                {:mvn/version "1.0.0.Final"}
+                borkdude/clj-reflector-graal-java11-fix
+                {:mvn/version "0.0.1-graalvm-20.3.0"
+                 :exclusions  [org.graalvm.nativeimage/svm]}
+                clj.native-image/clj.native-image
+                {:git/url    "https://github.com/taylorwood/clj.native-image.git"
+                 :exclusions [commons-logging/commons-logging
+                              org.slf4j/slf4j-nop]
+                 :sha        "f3e40672d5c543b80a2019c1f07b2d3fe785962c"}}}
+  :native-image
   {:main-opts  ["-m" "clj.native-image" "core"
                 "--enable-https"
                 "--no-fallback"
                 "--language:js"
+                "--verbose"
                 "--allow-incomplete-classpath"
                 "--initialize-at-build-time"
                 "--enable-all-security-services"

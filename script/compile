@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+set -eou pipefail
+
+KET_XMX=${KET_XMX:-"-J-Xmx48500m"}
+
+if [ -z "$GRAALVM_HOME" ]; then
+    echo "Please set GRAALVM_HOME"
+    exit 1
+fi
+
+KET_JAR=${KET_JAR:-"target/ket-uber.jar"}
+
+if [[ ! -f "$KET_JAR" ]]
+then
+    echo "Please run make uberjar first."
+    exit 1
+fi
+
+args=( "-jar"
+       "$KET_JAR"
+       "-H:Name=ket"
+       "-H:IncludeResources=KET_VERSION"
+       "--verbose"
+       "--no-server"
+       "--enable-https"
+       "--no-fallback"
+       "--language:js"
+       "--allow-incomplete-classpath"
+       "--initialize-at-build-time"
+       "--enable-all-security-services"
+       "--initialize-at-run-time=org.httpkit.client.HttpClient"
+       "--initialize-at-run-time=org.httpkit.client.SslContextFactory"
+       "--report-unsupported-elements-at-runtime"
+       "-J-Dclojure.compiler.direct-linking=true"
+       "-H:ReflectionConfigurationFiles=graalvm/reflect-config.json"
+       "-H:+ReportExceptionStackTraces"
+       "-H:IncludeResources=logback.xml"
+       "$KET_XMX")
+
+KET_STATIC=${KET_STATIC:-}
+KET_MUSL=${KET_MUSL:-}
+
+if [ "$KET_STATIC" = "true" ]; then
+    args+=("--static")
+    if [ "$KET_MUSL" = "true" ]; then
+        args+=("--libc=musl")
+    fi
+fi
+
+"$GRAALVM_HOME/bin/native-image" "${args[@]}"

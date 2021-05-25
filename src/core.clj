@@ -12,6 +12,8 @@
   (:import (org.slf4j LoggerFactory)
            (ch.qos.logback.classic Logger Level)))
 
+(def version (str/trim (slurp (io/resource "KET_VERSION"))))
+
 (defn find-operation [operation-name cli-operations]
   (first (filter (fn [op] (= (name operation-name) (:name op))) cli-operations)))
 
@@ -35,16 +37,14 @@
           resp (cond
                  (true? (:docs options)) (:docs operation)
                  (true? (:defaults options)) (:defaults operation))]
-      (println
-        (json/encode
-          (if-let [msg (if (empty? resp)
-                         (if (empty? options)
-                           (throw (Exception. (format "Configuration for the operation '%s' is bad: '%s'"
-                                                      (name operation-name) options)))
-                           ((:handler-fn operation) options))
-                         resp)]
-            msg
-            (format "Operation '%s' is finished" (name operation-name))))))
+      (if-let [msg (if (empty? resp)
+                     (if (empty? options)
+                       (throw (Exception. (format "Configuration for the operation '%s' is bad: '%s'"
+                                                  (name operation-name) options)))
+                       ((:handler-fn operation) options))
+                     resp)]
+        (println (json/encode msg))
+        (log/infof "Operation '%s' is finished" (name operation-name))))
     (throw (Exception. "Operation name was not provided"))))
 
 (defn handle-subcommand [{:keys [options] :as cli-opts} cli-operations]
@@ -78,6 +78,11 @@
 (def cli-operations
   (concat ops/operations ops-overrides/cli))
 
+(defn print-summary-msg [summary]
+  (println (format "ket %s" version))
+  (println "Supported options:")
+  (println summary))
+
 (defn handle-cli [args]
   (let [{:keys [options summary errors arguments] :as cli-opts} (cli/recursive-parse args cli-operations)]
     (if errors
@@ -87,7 +92,7 @@
       (if (or (get options :help)
               (and (empty? options) (empty? arguments))
               (empty? args))
-        (println summary)
+        (print-summary-msg summary)
         (handle-subcommand cli-opts cli-operations)))))
 
 (comment

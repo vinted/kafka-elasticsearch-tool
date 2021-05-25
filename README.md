@@ -223,7 +223,9 @@ Also, in the same fashion the script can be provided:
 
 ## Logging
 
-Logging is controlled by the [logback](http://logback.qos.ch/) library. The output layout is JSON (you can query it with `jq` or collect logs with logstash or beats).
+Logging is controlled by the [logback](http://logback.qos.ch/) library.
+Logger logs to `System.err`.
+The output layout is JSON (you can query it with `jq` or collect logs with logstash).
 Default logging level is `INFO`.
 When executed as a binary, i.e. `./ket OPERATION`, then logging levels are controlled by an environment variable called: `ROOT_LOGGER_LEVEL`, e.g. `ROOT_LOGGER_LEVEL=WARN ./ket operation -f config.json`
 Acceptable values of the `ROOT_LOGGER_LEVEL` are: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `FATAL`.

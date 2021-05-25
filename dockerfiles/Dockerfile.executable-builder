@@ -1,11 +1,12 @@
-FROM findepi/graalvm:java11-native as BUILDER
+FROM findepi/graalvm:21.0.0.2-java11-all as BUILDER
 
 ENV GRAALVM_HOME=/graalvm
 ENV JAVA_HOME=/graalvm
 ENV CLOJURE_VERSION=1.10.3.814
 
-RUN apt-get install -y curl \
-    && gu install native-image \
+RUN apt-get update && apt-get install -y curl git make
+
+RUN gu install native-image \
     && gu install ruby \
     && gu install python \
     && gu install r \
@@ -14,13 +15,44 @@ RUN apt-get install -y curl \
     && ./linux-install-$CLOJURE_VERSION.sh \
     && rm linux-install-$CLOJURE_VERSION.sh
 
+ENV MUSL_DIR=${HOME}/.musl
+ENV MUSL_VERSION=1.2.2
+ENV ZLIB_VERSION=1.2.11
+
+RUN mkdir $MUSL_DIR \
+    && curl https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz -o musl-${MUSL_VERSION}.tar.gz \
+    && tar zxvf musl-${MUSL_VERSION}.tar.gz \
+    && cd musl-${MUSL_VERSION} \
+    && ./configure --disable-shared --prefix=${MUSL_DIR} \
+    && make \
+    && make install \
+    && curl https://zlib.net/zlib-${ZLIB_VERSION}.tar.gz -o zlib-${ZLIB_VERSION}.tar.gz \
+    && tar zxvf zlib-${ZLIB_VERSION}.tar.gz \
+    && cd zlib-${ZLIB_VERSION} \
+    && ./configure --static --prefix=${MUSL_DIR} \
+    && make \
+    && make install
+
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
+ENV PATH=$PATH:${MUSL_DIR}/bin
+
 COPY deps.edn /usr/src/app/
-RUN clojure -P -M:native-ket
+RUN clojure -P && clojure -P -M:uberjar
 COPY resources/ /usr/src/app/resources
 COPY graalvm/ /usr/src/app/graalvm/
 COPY src/ /usr/src/app/src
+COPY script/ /usr/src/app/script
 
-RUN clojure -M:native-ket
+RUN clojure -Spom
+RUN clojure -X:uberjar :jar target/ket-uber.jar :main-class core
+
+ARG KET_STATIC
+ENV KET_STATIC=$KET_STATIC
+
+ARG KET_MUSL
+ENV KET_MUSL=$KET_MUSL
+
+# RUN script/compile
+RUN clojure -M:native-image-linux-static-musl
