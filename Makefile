@@ -1,5 +1,13 @@
 include dockerfiles/docker.mk
 
+.PHONY: pom.xml
+pom.xml:
+	clojure -Spom
+
+.PHONY: uberjar
+uberjar: pom.xml
+	clojure -X:uberjar :jar target/ket-uber.jar :main-class core
+
 .PHONY: lint
 lint:
 	clojure -M:clj-kondo
@@ -27,8 +35,13 @@ run-integration-tests:
 	docker-compose $(ES_TEST) build
 	docker-compose $(ES_TEST) up --remove-orphans --abort-on-container-exit --exit-code-from tools-test
 
-build-ket:
-	docker build -f dockerfiles/Dockerfile.executable-builder -t ket-native-image .
-	docker rm ket-native-image-build || true
-	docker create --name ket-native-image-build ket-native-image
-	docker cp ket-native-image-build:/usr/src/app/ket ket
+docker_build = (docker build --build-arg $1 --build-arg $2 -f dockerfiles/Dockerfile.executable-builder -t ket-native-image .; \
+				docker rm ket-native-image-build || true; \
+				docker create --name ket-native-image-build ket-native-image; \
+				docker cp ket-native-image-build:/usr/src/app/ket ket)
+
+build:
+	clojure -M:native-image
+
+build-linux-static:
+	$(call docker_build, KET_STATIC=true, KET_MUSL=true)
