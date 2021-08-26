@@ -37,14 +37,45 @@
                          :headers {"Content-Type" "application/json"}
                          :body    (json/encode {:defaults defaults} {:pretty true})})}}]]))
 
+(def healtz-ready {:summary (format "healthz/ready handler")
+                   :handler (fn [_]
+                              {:status  200
+                               :headers {"Content-Type" "text/plain"}
+                               :body    "ready"})})
+
+(def healtz-live {:summary (format "healthz/live handler")
+                  :handler (fn [_]
+                             {:status  200
+                              :headers {"Content-Type" "text/plain"}
+                              :body    "live"})})
+
+(def metrics {:summary (format "metrics handler")
+              :handler (fn [_]
+                         {:status  200
+                          :headers {"Content-Type" "text/plain"}
+                          :body    "# TYPE ket_up gauge\nket_up 1"})})
+
 (def ops
-  (vec (concat ["/ops"]
+  (vec (concat ["/"]
                (map (fn [path]
-                      [path {:summary "List of available operation"
-                             :handler (fn [_]
-                                        {:status  200
-                                         :headers {"Content-Type" "application/json"}
-                                         :body    (json/encode {:ops (map (fn [op] (:name op))
-                                                                          my-ops/operations)})})}])
-                    ["" "/"])
-               (map (fn [operation] (operation->routes operation)) my-ops/operations))))
+                      (case path
+                        "healthz/ready" [path healtz-ready]
+                        "healthz/live" [path healtz-live]
+                        "metrics" [path metrics]
+                        "ops" (vec
+                                (concat
+                                  [path
+                                   ["" {:summary "List of available operation"
+                                        :handler (fn [_]
+                                                   {:status  200
+                                                    :headers {"Content-Type" "application/json"}
+                                                    :body    (json/encode {:ops (map (fn [op] (:name op))
+                                                                                     my-ops/operations)})})}]
+                                   ["/" {:summary "List of available operation"
+                                         :handler (fn [_]
+                                                    {:status  200
+                                                     :headers {"Content-Type" "application/json"}
+                                                     :body    (json/encode {:ops (map (fn [op] (:name op))
+                                                                                      my-ops/operations)})})}]]
+                                  (map (fn [operation] (operation->routes operation)) my-ops/operations)))))
+                    ["healthz/ready" "healthz/live" "metrics" "ops"]))))
