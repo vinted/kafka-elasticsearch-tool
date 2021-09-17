@@ -8,7 +8,8 @@
             [sink.elasticsearch.index :as es-sink]
             [source.elasticsearch :as es]
             [replay.transform.uri :as transform-uri]
-            [replay.transform.query :as transform-query])
+            [replay.transform.query :as transform-query]
+            [replay.transform.selector :as selector])
   (:import (java.time Instant)
            (java.util UUID)))
 
@@ -39,10 +40,10 @@
   (let [replay-conf (:replay conf)
         es-host (:connection.url replay-conf)
         transform-fn (transform-query/transform-fn (:query-transforms replay-conf))
-        original-query-key (keyword (:query_attr replay-conf))]
+        query-selector (selector/path->selector (:query_attr replay-conf))]
     (fn [{source :_source :as input-doc} channel]
       (let [endpoint (transform-uri/construct-endpoint source replay-conf)
-            original-query (get source original-query-key)
+            ^String original-query (get-in source query-selector)
             query (transform-fn original-query)
             start (System/currentTimeMillis)]
         (http/request
