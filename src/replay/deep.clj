@@ -4,11 +4,13 @@
             [core.async :as async]
             [core.json :as json]
             [source.elasticsearch :as es]
-            [sink :as sink])
+            [sink :as sink]
+            [replay.transform.selector :as selector]
+            [replay.transform.uri :as transform-uri])
   (:import (java.time Instant)))
 
 (def DEFAULT_DEPTH 1)
-(def DEFAULT_PAGE_SIZE 5000)
+(def DEFAULT_PAGE_SIZE 3000)
 
 (defn prepare-query [query replay-conf]
   (-> query
@@ -17,16 +19,32 @@
       (assoc :explain true)
       (assoc :sort ["_score" {:created_at "desc"}])))
 
+(defn additional-data [query-log-attrs query-log-entry-source]
+  (loop [[attr & attrs] query-log-attrs
+         acc {}]
+    (if attr
+      (recur attrs
+             (assoc acc (:key attr)
+                        (get-in query-log-entry-source
+                                (selector/path->selector
+                                  (:selector attr)))))
+      acc)))
+
 (defn query-es-afn [conf]
   (let [replay-conf (:replay conf)
         depth (or (:depth replay-conf) DEFAULT_DEPTH)
         query-log-host (-> conf :source :remote :host)
         dest-es-host (:connection.url replay-conf)
-        doc-fetch-strategy (or (:doc-fetch-strategy replay-conf) :search-after-with-pit)]
+        doc-fetch-strategy (or (:doc-fetch-strategy replay-conf) :search-after-with-pit)
+        query-selector (selector/path->selector (:query_attr replay-conf))
+        query-log-attrs (partial additional-data (:query-log-attrs replay-conf))]
     (fn [query-log-entry channel]
-      (let [index-name (or (:target-index replay-conf)
-                           (-> query-log-entry :fields :uri.index first))
-            query (-> query-log-entry :_source :request json/decode (prepare-query replay-conf))
+      (let [query-log-entry-source (get query-log-entry :_source)
+            raw-endpoint (transform-uri/construct-endpoint query-log-entry-source replay-conf)
+            ^String index-name (or (:target-index replay-conf)
+                                   (transform-uri/get-index-or-alias raw-endpoint))
+            ^String raw-query (get-in query-log-entry-source query-selector)
+            query (-> raw-query json/decode (prepare-query replay-conf))
             hits (es/fetch {:max_docs depth
                             :source   {:remote   {:host dest-es-host}
                                        :index    index-name
@@ -34,33 +52,14 @@
                                        :strategy doc-fetch-strategy}})]
         (sink/store! (map (fn [resp rank]
                             {:key     (format "%s:%s:%s" (:id replay-conf) (:_id query-log-entry) rank)
-                             :value   {:replay_id           (:id replay-conf)
-                                       :query_log_host      query-log-host
-                                       :query_log_id        (:_id query-log-entry)
-                                       :x_user_id           (-> query-log-entry
-                                                                :_source
-                                                                :request_headers
-                                                                :x-user-id
-                                                                first)
-                                       :x_search_session_id (-> query-log-entry
-                                                                :_source
-                                                                :request_headers
-                                                                :x-search-session-id
-                                                                first)
-                                       :x_anon_id           (-> query-log-entry
-                                                                :_source
-                                                                :request_headers
-                                                                :x-anon-id
-                                                                first)
-                                       :query_body          (-> query-log-entry :_source :request)
-                                       :query-timestamp     (str (Instant/ofEpochMilli
-                                                                   (-> query-log-entry
-                                                                       :_source
-                                                                       :header.timestamp)))
-                                       :replay-timestamp    (str (Instant/now))
-                                       :replay_host         dest-es-host
-                                       :rank                rank
-                                       :hit                 resp}
+                             :value   (merge {:replay_id        (:id replay-conf)
+                                              :query_log_host   query-log-host
+                                              :query_log_id     (:_id query-log-entry)
+                                              :replay-timestamp (str (Instant/now))
+                                              :replay_host      dest-es-host
+                                              :rank             rank
+                                              :hit              resp}
+                                             (query-log-attrs query-log-entry-source))
                              :headers {}})
                           hits (range))
                      conf)

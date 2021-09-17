@@ -48,3 +48,9 @@
     {:uri "/foo/bar/baz"
      :transforms [{:match "bar"
                    :replacement "XXXX"}]}))
+
+(defn get-index-or-alias
+  "Given Elasticsearch uri, extracts index or alias name"
+  [endpoint]
+  (or (last (re-find #"^/(.*)/_search" endpoint))
+      (last (re-find #"^https?://.+(:.+)?/(.*)/_search" endpoint))))

@@ -16,10 +16,6 @@
 
 ; https://www.elastic.co/guide/en/elasticsearch/reference/current/search-rank-eval.html
 
-(defn get-index-or-alias [endpoint]
-  (or (last (re-find #"^/(.*)/_search" endpoint))
-      (last (re-find #"^https?://.+(:.+)?/(.*)/_search" endpoint))))
-
 (defn prepare-endpoint
   "Prepares the endpoint for PIT queries: remove preference, routing, index name."
   [^String endpoint]
@@ -146,7 +142,7 @@
         query-log-entry-source (get-in query-log-entry [:_source])
         raw-endpoint (transform-uri/construct-endpoint query-log-entry-source (:replay replay-conf))
         target-index (or (get-in replay-conf [:replay :target-index])
-                         (get-index-or-alias raw-endpoint))
+                         (transform-uri/get-index-or-alias raw-endpoint))
         k (get-top-k replay-conf)
         query-selector (selector/path->selector (:query_attr (:replay replay-conf)))
         query-body (json/decode (get-in query-log-entry-source query-selector))

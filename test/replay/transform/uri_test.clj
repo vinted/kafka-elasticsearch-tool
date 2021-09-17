@@ -33,10 +33,21 @@
     (let [doc {:bar {:foo "/foo/_count?q=elastic"}}
           replay-conf {:uri_attr       ["bar" "foo"]
                        :uri-transforms [{:match "_count\\?" :replacement "_search?size=0&"}]}]
-      (is (= "/foo/_search?size=0&q=elastic" (replay.transform.uri/construct-endpoint doc replay-conf)))))
+      (is (= "/foo/_search?size=0&q=elastic" (transform-uri/construct-endpoint doc replay-conf)))))
 
   (testing "uri.attr is a path into a nested map and array"
     (let [doc {:bar [{:no-foo "XXXXXXX"} {:foo "/foo/_count?q=elastic"}]}
           replay-conf {:uri_attr       ["bar" 1 "foo"]
                        :uri-transforms [{:match "_count\\?" :replacement "_search?size=0&"}]}]
-      (is (= "/foo/_search?size=0&q=elastic" (replay.transform.uri/construct-endpoint doc replay-conf))))))
+      (is (= "/foo/_search?size=0&q=elastic" (transform-uri/construct-endpoint doc replay-conf))))))
+
+(deftest index-name-extraction
+  (testing "without host"
+    (let [uri "/index-name/_search?preference=7c5fe2d7-d313-4362-a62f-4c1e10e999fd"]
+      (is (= "index-name" (transform-uri/get-index-or-alias uri)))))
+  (testing "with host"
+    (let [uri "http://localhost/index-name/_search?preference=7c5fe2d7-d313-4362-a62f-4c1e10e999fd"]
+      (is (= "index-name" (transform-uri/get-index-or-alias uri)))))
+  (testing "with host and port"
+    (let [uri "http://localhost:9200/index-name/_search?preference=7c5fe2d7-d313-4362-a62f-4c1e10e999fd"]
+      (is (= "index-name" (transform-uri/get-index-or-alias uri))))))
