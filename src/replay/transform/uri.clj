@@ -15,10 +15,12 @@
 (defn extract-uri [doc replay-conf]
   (let [uri-attr-path (:uri_attr replay-conf)
         ; uri-attr-path should can be either string of a list of keys to get-in
-        uri-path (selector/path->selector uri-attr-path)]
-    (get-in doc uri-path)))
+        uri-selector (selector/path->selector uri-attr-path)]
+    (get-in doc uri-selector)))
 
-(defn construct-endpoint [doc replay-conf]
+(defn construct-endpoint
+  "Either a hardcoded uri or transformed uri from the original query."
+  [doc replay-conf]
   (or (:uri replay-conf)
       (let [uri (extract-uri doc replay-conf)]
         (transform-uri uri (:uri-transforms replay-conf)))))
