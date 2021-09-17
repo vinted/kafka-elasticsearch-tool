@@ -1,5 +1,6 @@
 (ns replay.transform.uri
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [replay.transform.selector :as selector]))
 
 (defn transform-uri [^String uri transforms]
   (reduce (fn [uri {:keys [match replacement]}]
@@ -14,11 +15,7 @@
 (defn extract-uri [doc replay-conf]
   (let [uri-attr-path (:uri_attr replay-conf)
         ; uri-attr-path should can be either string of a list of keys to get-in
-        uri-path (if (string? uri-attr-path)
-                   [(keyword uri-attr-path)]
-                   (map (fn [selector] (if (string? selector)
-                                         (keyword selector)
-                                         selector)) uri-attr-path))]
+        uri-path (selector/path->selector uri-attr-path)]
     (get-in doc uri-path)))
 
 (defn construct-endpoint [doc replay-conf]
