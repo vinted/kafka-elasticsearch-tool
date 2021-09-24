@@ -2,9 +2,9 @@
   (:require [clojure.string :as s]
             [clojure.data :as data]
             [clojure.java.io :as io]
-            [clojure.tools.logging :as log]
             [core.json :as json]
             [polyglot.js :as js]
+            [polyglot.jq :as jq]
             [polyglot.sci :as sci])
   (:import (java.io File)))
 
@@ -28,6 +28,15 @@
   (polyglot/apply-sci-transformation
     {:data "{\"my\": \"data\"}"
      :script "(fn [m] (assoc m :foo :bar))"}))
+
+(defn apply-jq-transformation [{:keys [data script]}]
+  (let [script (jq/script->transform-fn script)]
+    (script data)))
+
+(comment
+  (polyglot/apply-jq-transformation
+    {:data   "{\"my\": \"data\"}"
+     :script ".foo = \"bar\""}))
 
 (defn compare-with-expected [^String expected ^String actual]
   (let [e (json/decode expected)
@@ -61,6 +70,7 @@
                                      (and (nil? script) (.exists ^File (io/file file))) (assoc :script (slurp file)))]
                      (case lang-code
                        :js (apply-js-transformation req)
+                       :jq (apply-jq-transformation req)
                        :sci (apply-sci-transformation req)
                        {:error (format "Language '%s' is not supported." lang)}))))
         matches-expected? (when  expected
