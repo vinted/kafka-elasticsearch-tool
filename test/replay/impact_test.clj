@@ -2,10 +2,6 @@
   (:require [clojure.test :refer [deftest is testing]]
             [replay.impact :as impact]))
 
-(deftest index-name-extraction
-  (let [uri "/index-name/_search?preference=7c5fe2d7-d313-4362-a62f-4c1e10e999fd"]
-    (is (= "index-name" (impact/get-index-or-alias uri)))))
-
 (deftest url-transformations
   (let [uri "/index-name/_search?preference=7c5fe2d7-d313-4362-a62f-4c1e10e999fd"]
     (is (= "/_search" (impact/prepare-endpoint uri))))

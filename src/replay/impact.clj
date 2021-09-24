@@ -8,14 +8,13 @@
             [sink.elasticsearch.index :as es-sink]
             [source.elasticsearch :as es]
             [replay.transform.uri :as transform.uri]
-            [replay.transform.impact :as impact-transform]))
+            [replay.transform.impact :as impact-transform]
+            [replay.transform.uri :as transform-uri]
+            [replay.transform.selector :as selector]))
 
 (set! *warn-on-reflection* true)
 
 ; https://www.elastic.co/guide/en/elasticsearch/reference/current/search-rank-eval.html
-
-(defn get-index-or-alias [endpoint]
-  (last (re-find #"^/(.*)/_search" endpoint)))
 
 (defn prepare-endpoint
   "Prepares the endpoint for PIT queries: remove preference, routing, index name."
@@ -138,17 +137,20 @@
             (select-keys (assoc provided-metric-config :k k)
                          (keys default-metric-config)))}))
 
-(defn measure-impact [opts query-log-entry]
-  (let [target-es-host (get-in opts [:replay :connection.url])
-        raw-endpoint (get-in query-log-entry [:_source :uri])
-        target-index (or (get-in opts [:replay :target-index]) (get-index-or-alias raw-endpoint))
-        k (get-top-k opts)
-        query-body (json/decode (get-in query-log-entry [:_source :request]))
-        metric (get-metric opts)
-        pit (assoc (pit/init target-es-host target-index opts) :keep_alive "30s")
+(defn measure-impact [replay-conf query-log-entry]
+  (let [target-es-host (get-in replay-conf [:replay :connection.url])
+        query-log-entry-source (get-in query-log-entry [:_source])
+        raw-endpoint (transform-uri/construct-endpoint query-log-entry-source (:replay replay-conf))
+        target-index (or (get-in replay-conf [:replay :target-index])
+                         (transform-uri/get-index-or-alias raw-endpoint))
+        k (get-top-k replay-conf)
+        query-selector (selector/path->selector (:query_attr (:replay replay-conf)))
+        query-body (json/decode (get-in query-log-entry-source query-selector))
+        metric (get-metric replay-conf)
+        pit (assoc (pit/init target-es-host target-index replay-conf) :keep_alive "30s")
         baseline-ratings-url (format "%s%s" target-es-host (prepare-endpoint raw-endpoint))
-        baseline-ratings (get-baseline-ratings baseline-ratings-url query-body pit k (get-in opts [:replay :ignore-timeouts]))
-        grouped-variations (get-grouped-query-variations query-body opts k)
+        baseline-ratings (get-baseline-ratings baseline-ratings-url query-body pit k (get-in replay-conf [:replay :ignore-timeouts]))
+        grouped-variations (get-grouped-query-variations query-body replay-conf k)
         rank-eval-resp (query-rank-eval-api target-es-host target-index baseline-ratings grouped-variations metric pit)]
     (log/infof "RFI metric used: '%s'" metric)
     (construct-rfi-records rank-eval-resp query-log-entry grouped-variations baseline-ratings k)))
