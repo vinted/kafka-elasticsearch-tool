@@ -5,19 +5,12 @@
             [core.json :as json]
             [source.elasticsearch :as es]
             [sink :as sink]
+            [replay.transform.query :as transform-query]
             [replay.transform.selector :as selector]
             [replay.transform.uri :as transform-uri])
   (:import (java.time Instant)))
 
 (def DEFAULT_DEPTH 1)
-(def DEFAULT_PAGE_SIZE 3000)
-
-(defn prepare-query [query replay-conf]
-  (-> query
-      (assoc :size (min (or (:depth replay-conf) DEFAULT_DEPTH) DEFAULT_PAGE_SIZE))
-      (assoc :_source true)
-      (assoc :explain true)
-      (assoc :sort ["_score" {:created_at "desc"}])))
 
 (defn additional-data [query-log-attrs query-log-entry-source]
   (loop [[attr & attrs] query-log-attrs
@@ -43,12 +36,14 @@
             raw-endpoint (transform-uri/construct-endpoint query-log-entry-source replay-conf)
             ^String index-name (or (:target-index replay-conf)
                                    (transform-uri/get-index-or-alias raw-endpoint))
+            transform-fn (transform-query/transform-fn (:query-transforms replay-conf))
             ^String raw-query (get-in query-log-entry-source query-selector)
-            query (-> raw-query json/decode (prepare-query replay-conf))
+            ^String transformed-query (transform-fn raw-query)
+            prepared-query (-> transformed-query json/decode)
             hits (es/fetch {:max_docs depth
                             :source   {:remote   {:host dest-es-host}
                                        :index    index-name
-                                       :query    query
+                                       :query    prepared-query
                                        :strategy doc-fetch-strategy}})]
         (sink/store! (map (fn [resp rank]
                             {:key     (format "%s:%s:%s" (:id replay-conf) (:_id query-log-entry) rank)

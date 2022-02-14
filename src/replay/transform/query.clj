@@ -13,7 +13,7 @@
 ;; TODO: optimize consecutive JQ scripts to be executed in one pass
 (defn transform-fn [transforms]
   (let [tf-fn (apply comp (map compile-transform (reverse transforms)))]
-    (fn [query] (tf-fn query))))
+    (fn [^String query] (tf-fn query))))
 
 (comment
   ;; Applies transforms on the input string in order
