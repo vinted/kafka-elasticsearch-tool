@@ -4,7 +4,8 @@ ENV GRAALVM_HOME=/graalvm
 ENV JAVA_HOME=/graalvm
 ENV CLOJURE_VERSION=1.10.3.814
 
-RUN apt-get update && apt-get install -y curl git make
+RUN sed -i 's/stable\/updates/stable-security\/updates/' /etc/apt/sources.list
+RUN apt-get --allow-releaseinfo-change update && apt-get install -y curl git make
 
 RUN gu install native-image \
     && gu install ruby \
