@@ -28,7 +28,8 @@
         depth (or (:depth replay-conf) DEFAULT_DEPTH)
         query-log-host (-> conf :source :remote :host)
         dest-es-host (:connection.url replay-conf)
-        doc-fetch-strategy (or (:doc-fetch-strategy replay-conf) :search-after-with-pit)
+        doc-fetch-strategy (keyword (or (:doc-fetch-strategy replay-conf)
+                                        :search-after-with-pit))
         query-selector (selector/path->selector (:query_attr replay-conf))
         query-log-attrs (partial additional-data (:query-log-attrs replay-conf))]
     (fn [query-log-entry channel]
