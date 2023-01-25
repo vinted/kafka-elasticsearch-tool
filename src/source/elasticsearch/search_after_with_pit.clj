@@ -31,7 +31,9 @@
 (defn fetch [opts]
   (let [max-docs (-> opts :max_docs)
         es-host (or (-> opts :source :remote :host) "http://localhost:9200")
-        index-name (or (-> opts :source :remote :index) "*")
+        index-name (or (-> opts :source :index)
+                       (-> opts :source :remote :index)
+                       "*")
         query (or (-> opts :source :query) {:query {:match_all {}}})
         keep-alive (or (-> opts :source :remote :connect_timeout) "30s")]
     (records es-host index-name query max-docs keep-alive)))
@@ -39,5 +41,5 @@
 (comment
   (source.elasticsearch.search-after-with-pit/fetch
     {:max_docs 12
-     :source {:remote {:host "http://localhost:9200"}
-              :index "index_name"}}))
+     :source   {:remote {:host "http://localhost:9200"}
+                :index  "index_name"}}))
